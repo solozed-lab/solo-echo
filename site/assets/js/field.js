@@ -80,16 +80,18 @@
      场（field）的章节参数。world.js 把滚动进度映射到这里的章节索引。
      shape 决定节点被"吸引"到的目标形态，kShape 决定吸引强度。 */
   const CHAPTERS = [
-    { id: 'origin', shape: 'sphere',   rScale: 0.46, kShape: 0.40, flow: 1.00, speed: 1.00, link: 132, linkAlpha: 0.50, size: 2.5, energy: 0.55,
+    { id: 'start',   shape: 'sphere',   rScale: 0.46, kShape: 0.40, flow: 1.00, speed: 1.00, link: 132, linkAlpha: 0.50, size: 2.5, energy: 0.55,
       pal: ['#4de3ff', '#7f9dff', '#a06bff'] },
-    { id: 'ai',     shape: 'bipolar',  rScale: 0.40, kShape: 0.55, flow: 0.80, speed: 1.10, link: 146, linkAlpha: 0.55, size: 2.4, energy: 0.70,
+    { id: 'human-ai', shape: 'bipolar',  rScale: 0.40, kShape: 0.55, flow: 0.80, speed: 1.10, link: 146, linkAlpha: 0.55, size: 2.4, energy: 0.70,
       pal: ['#4de3ff', '#a06bff', '#ff7bd5'] },
-    { id: 'human',  shape: 'cluster',  rScale: 0.42, kShape: 0.50, flow: 0.90, speed: 1.05, link: 118, linkAlpha: 0.62, size: 2.6, energy: 0.65,
+    { id: 'ai-ai',   shape: 'lattice',  rScale: 0.48, kShape: 0.60, flow: 0.55, speed: 1.05, link: 128, linkAlpha: 0.62, size: 2.5, energy: 0.80,
+      pal: ['#a06bff', '#ff7bd5', '#7f9dff'] },
+    { id: 'human-human', shape: 'cluster', rScale: 0.42, kShape: 0.50, flow: 0.90, speed: 1.05, link: 118, linkAlpha: 0.62, size: 2.6, energy: 0.65,
       pal: ['#ffb765', '#ff8f6b', '#4de3ff'] },
-    { id: 'mesh',   shape: 'shell',    rScale: 0.52, kShape: 0.45, flow: 0.50, speed: 0.85, link: 138, linkAlpha: 0.45, size: 2.3, energy: 0.45,
+    { id: 'all',     shape: 'shell',    rScale: 0.52, kShape: 0.45, flow: 0.50, speed: 0.85, link: 138, linkAlpha: 0.45, size: 2.3, energy: 0.50,
       pal: ['#4de3ff', '#a06bff', '#ffb765'] },
-    { id: 'join',   shape: 'gate',     rScale: 0.40, kShape: 0.68, flow: 0.35, speed: 0.70, link: 112, linkAlpha: 0.60, size: 2.8, energy: 0.35,
-      pal: ['#4de3ff', '#eaf6ff', '#ffb765'] }
+    { id: 'join',    shape: 'gate',     rScale: 0.40, kShape: 0.68, flow: 0.35, speed: 0.70, link: 112, linkAlpha: 0.60, size: 2.8, energy: 0.35,
+      pal: ['#4de3ff', '#eaf6ff', '#ff7bd5'] }
   ];
 
   const KIND_World = 0, KIND_AI = 1, KIND_Human = 2, KIND_Core = 3;
@@ -339,6 +341,7 @@
     const px = new Float32Array(MAX), py = new Float32Array(MAX);
     const vx = new Float32Array(MAX), vy = new Float32Array(MAX);
     const pu = new Float32Array(MAX), pv = new Float32Array(MAX);
+    const pjit = new Float32Array(MAX), pjit2 = new Float32Array(MAX);
     const pkind = new Uint8Array(MAX), pcluster = new Uint8Array(MAX);
     const phue = new Float32Array(MAX), psize = new Float32Array(MAX);
     const pcharge = new Float32Array(MAX), pflash = new Float32Array(MAX);
@@ -352,6 +355,8 @@
     for (let i = 0; i < MAX; i++) {
       pu[i] = rnd();
       pv[i] = rnd();
+      pjit[i] = rnd();
+      pjit2[i] = rnd();
       pcluster[i] = (rnd() * 4) | 0;
       const r = rnd();
       pkind[i] = r < 0.58 ? KIND_World : r < 0.76 ? KIND_AI : r < 0.93 ? KIND_Human : KIND_Core;
@@ -419,6 +424,21 @@
           const a = u * TAU, rr = rad * (0.08 + 0.42 * Math.sqrt(v));
           out[0] = cx + side * rad * 0.92 + Math.cos(a) * rr * 0.6;
           out[1] = cy + Math.sin(a) * rr * 0.95;
+          break;
+        }
+        case 'lattice': {
+          // 两个格栅相对而立，中间一条交换带 —— AI 与 AI 互发信号
+          const side = v < 0.5 ? -1 : 1;
+          if (u < 0.74) {
+            const col = (Math.floor((u / 0.74) * 5) + 0.5) / 5 + (pjit[i] - 0.5) * 0.16;
+            const row = (pcluster[i] + 0.5) / 4 + (pjit2[i] - 0.5) * 0.30;
+            out[0] = cx + side * rad * 0.66 + (col - 0.5) * rad * 0.82;
+            out[1] = cy + (row - 0.5) * rad * 1.22;
+          } else {
+            const t = (u - 0.74) / 0.26;
+            out[0] = cx + (t - 0.5) * rad * 1.30;
+            out[1] = cy + ((pcluster[i] + 0.5) / 4 - 0.5) * rad * 0.55;
+          }
           break;
         }
         case 'cluster': {

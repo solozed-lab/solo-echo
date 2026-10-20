@@ -17,62 +17,77 @@
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
 
-  /* ------------------------------------------------------------ 章节配置 */
+  /* ------------------------------------------------------------ 章节配置
+     主题：人与 AI、AI 与 AI、人与人 —— 三种关系，衍生出万物
+     骨架取自「道生一，一生二，二生三，三生万物」：
+       道(起点·人) → 一(人与 AI) → 二(AI 与 AI) → 三(人与人) → 万物 → 加入
+     粒子形态与之呼应：球云 / 双极 / 双格栅 / 簇群 / 球壳 / 拱门 */
   const SECTIONS = [
     {
-      id: 'origin', label: '万物互联',
+      id: 'start', label: '起点',
       clip: 'assets/vid/origin.mp4', clipMobile: 'assets/vid/m_origin.mp4',
       still: 'assets/img/poster_origin.jpg',
       accent: '#4de3ff',
-      eyebrow: '一切皆节点',
-      title: '万物互联，光在彼此之间找到路径',
-      body: '每一件物体、每一段数据、每一次心跳，都可以成为这张网络里的一个节点。连接不是附加功能，而是存在本身的方式。',
-      tags: ['物联网', '边缘智能', '开放协议'],
-      scroll: 1.45, overlayEnter: 0, overlayExit: 0.72
+      eyebrow: '道 · 起点',
+      title: '一切从一个节点开始',
+      body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。',
+      tags: ['道', '起点'],
+      scroll: 1.35, overlayEnter: 0, overlayExit: 0.72
     },
     {
-      id: 'ai', label: '人与 AI',
+      id: 'human-ai', label: '人与 AI',
       clip: 'assets/vid/ai.mp4', clipMobile: 'assets/vid/m_ai.mp4',
       still: 'assets/img/poster_ai.jpg',
       accent: '#a06bff',
-      eyebrow: '人与 AI',
-      title: 'AI 不是替代者，是另一个邻居',
-      body: '当机器开始理解语境，它就不再只是工具，而是关系里的另一个成员。它记得你的节奏，也尊重你的边界。',
-      tags: ['智能体', '上下文', '人机协同'],
-      scroll: 1.5, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'human', label: '人与人',
-      clip: 'assets/vid/human.mp4', clipMobile: 'assets/vid/m_human.mp4',
-      still: 'assets/img/poster_human.jpg',
-      accent: '#ffb765',
-      eyebrow: '人与人',
-      title: '人与人之间，重新长出连接',
-      body: '在一个人人都在线的时代，真正稀缺的依然是信任。我们把技术用在让人重新相遇的地方，而不是让相遇变少。',
-      tags: ['社群', '信任', '真实关系'],
-      scroll: 1.5, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'mesh', label: '万物共网',
-      clip: 'assets/vid/mesh.mp4', clipMobile: 'assets/vid/m_mesh.mp4',
-      still: 'assets/img/poster_mesh.jpg',
-      accent: '#6bd8ff',
-      eyebrow: '万物共网',
-      title: '一张网，而不是一堆孤岛',
-      body: '节点越多，价值越大。开放的协议与可验证的规则，让任何人都能接进这张正在自己生长的网。',
-      tags: ['开放协议', '可验证', '自生长'],
+      eyebrow: '一 · 人与 AI',
+      title: 'AI 不是工具，是另一个在场的人',
+      body: '它有记忆，有判断，有偏好，也有边界。回应你的不再是一段话，而是一个持续存在的另一方。',
+      tags: ['有记忆', '有判断', '有边界'],
       scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
     },
     {
-      id: 'join', label: '加入社群',
+      id: 'ai-ai', label: 'AI 与 AI',
+      clip: 'assets/vid/agents.mp4', clipMobile: 'assets/vid/m_agents.mp4',
+      still: 'assets/img/poster_agents.jpg',
+      accent: '#ff7bd5',
+      eyebrow: '二 · AI 与 AI',
+      title: '当智能体开始彼此对话',
+      body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。',
+      tags: ['智能体互调', '协作', '接力'],
+      scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
+    },
+    {
+      id: 'human-human', label: '人与人',
+      clip: 'assets/vid/human.mp4', clipMobile: 'assets/vid/m_human.mp4',
+      still: 'assets/img/poster_human.jpg',
+      accent: '#ffb765',
+      eyebrow: '三 · 人与人',
+      title: '人与人之间，重新长出连接',
+      body: '在一个人人都在线的时代，真正稀缺的依然是信任。我们把技术用在让人重新相遇的地方，而不是让相遇变少。',
+      tags: ['社群', '信任', '真实关系'],
+      scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
+    },
+    {
+      id: 'all', label: '万物',
+      clip: 'assets/vid/mesh.mp4', clipMobile: 'assets/vid/m_mesh.mp4',
+      still: 'assets/img/poster_mesh.jpg',
+      accent: '#6bd8ff',
+      eyebrow: '万物',
+      title: '三种关系，长出万物',
+      body: '人与 AI、AI 与 AI、人与人——当这三种连接同时成立，新的东西不需要被发明，它自己会生长出来。',
+      tags: ['自生长', '涌现', '开放'],
+      scroll: 1.3, overlayEnter: 0.02, overlayExit: 0.96
+    },
+    {
+      id: 'join', label: '加入',
       clip: 'assets/vid/join.mp4', clipMobile: 'assets/vid/m_join.mp4',
       still: 'assets/img/poster_join.jpg',
       accent: '#eaf6ff',
       eyebrow: '加入我们',
-      title: '下一根连接，从你开始',
-      body: '这里聚集着正在做 AI 的人、正在造物的人、正在寻找同路的人。进来，把你的节点接上这张网。',
+      title: '让你的回声，被更多节点听见',
+      body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。',
       tags: [],
-      scroll: 1.2, overlayEnter: 0, overlayExit: 1,
+      scroll: 1.1, overlayEnter: 0, overlayExit: 1,
       cta: {
         primary: { label: '申请加入', href: '#join' },
         secondary: { label: '回到顶部', href: '#top' }
@@ -81,21 +96,21 @@
   ];
 
   const CONNECTORS = [
-    'assets/vid/conn0.mp4', 'assets/vid/conn1.mp4',
-    'assets/vid/conn2.mp4', 'assets/vid/conn3.mp4'
+    'assets/vid/conn0.mp4', 'assets/vid/conn1.mp4', 'assets/vid/conn2.mp4',
+    'assets/vid/conn3.mp4', 'assets/vid/conn4.mp4'
   ];
 
   const CONNECTORS_M = [
-    'assets/vid/m_conn0.mp4', 'assets/vid/m_conn1.mp4',
-    'assets/vid/m_conn2.mp4', 'assets/vid/m_conn3.mp4'
+    'assets/vid/m_conn0.mp4', 'assets/vid/m_conn1.mp4', 'assets/vid/m_conn2.mp4',
+    'assets/vid/m_conn3.mp4', 'assets/vid/m_conn4.mp4'
   ];
 
   /* ------------------------------------------------- 挂载插件的滚动引擎 */
   const world = document.getElementById('world');
   mountScrollWorld(world, {
-    brand: { name: 'NEXUS 织网', href: '#top' },
-    cta: { label: '申请加入', href: '#join' },
-    hint: '滚动进入 · 移动鼠标让网络回应你',
+    brand: { name: 'ECHO 回声', href: '#top' },
+    cta: { label: '加入回声', href: '#join' },
+    hint: '滚动进入 · 移动鼠标，让回声穿过你',
     nav: true,
     atmosphere: true,
     diveScroll: 1.3,
@@ -350,15 +365,30 @@
 
   /* ------------------------------------------------------------ 启动 */
   // 首屏归位：浏览器的滚动恢复可能把页面停在底部，而引擎的章节状态
-  // （文案透明度 / 视频定位）会停留在恢复过程中的中间值。这里强制回到顶部，
-  // scrollTo 会派发真实的 scroll 事件，引擎随即重算全部章节状态。
+  // （文案透明度 / 视频定位）会停留在恢复过程中的中间值。
+  // 浏览器的恢复时机不确定（可能在 load 之后才发生），所以多试几次；
+  // 用户一旦自己滚动了就不再打扰。
+  let userScrolled = false;
+  const markScrolled = () => { userScrolled = true; };
+  window.addEventListener('wheel', markScrolled, { passive: true });
+  window.addEventListener('touchstart', markScrolled, { passive: true });
+  window.addEventListener('pointerdown', markScrolled, { passive: true });
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].indexOf(e.key) >= 0) markScrolled();
+  });
+
   function resetToTop() {
+    if (userScrolled) return;
     if (window.scrollY !== 0) window.scrollTo(0, 0);
     else window.dispatchEvent(new Event('scroll'));
   }
-  window.addEventListener('load', () => setTimeout(resetToTop, 80));
-  if (document.readyState === 'complete') setTimeout(resetToTop, 80);
-  setTimeout(resetToTop, 240);
+  window.addEventListener('pageshow', () => setTimeout(resetToTop, 50));
+  window.addEventListener('load', () => {
+    setTimeout(resetToTop, 60);
+    setTimeout(resetToTop, 400);
+    setTimeout(resetToTop, 1200);
+  });
+  if (document.readyState === 'complete') setTimeout(resetToTop, 60);
 
   if (reduce) {
     field.renderStatic();
