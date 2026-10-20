@@ -1,4 +1,4 @@
-# SOLOECHO · 滚动世界分镜（scroll-world-local）
+# Solo & Echo · 滚动世界分镜（scroll-world-local）
 
 > 主题：**人与 AI、AI 与 AI、人与人** —— 三种关系，衍生出万物
 > 骨架：道生一，一生二，二生三，三生万物

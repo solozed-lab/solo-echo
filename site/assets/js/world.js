@@ -108,7 +108,7 @@
   /* ------------------------------------------------- 挂载插件的滚动引擎 */
   const world = document.getElementById('world');
   mountScrollWorld(world, {
-    brand: { name: 'SOLOECHO', href: '#top' },
+    brand: { name: 'Solo & Echo', href: '#top' },
     cta: { label: '加入', href: '#join' },
     hint: '滚动进入 · 移动鼠标，让回声穿过你',
     nav: true,
