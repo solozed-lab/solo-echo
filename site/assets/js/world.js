@@ -1,10 +1,13 @@
 /* ============================================================================
-   world.js — 页面编排：滚动时间轴 ↔ 章节 ↔ 粒子场 ↔ 传感器
+   world.js — 页面编排：滚动时间轴 ↔ 章节 ↔ 粒子场 ↔ 传感器 ↔ 语言
    ----------------------------------------------------------------------------
    层级：
      L0 背景视频层  插件的 scrub-engine 按滚动 scrub（assets/vid/*.mp4）
      L1 实时粒子层  本文件创建的 WebGL 粒子场（唯一响应输入的一层）
      L2 文字层      插件的 DOM 排版 / CTA
+   语言：
+     插件在挂载时把文案写进 DOM，之后不再碰文字。
+     所以切换语言 = 原地改写 DOM 文本（不重挂载、不丢滚动位置）。
    ========================================================================== */
 (function () {
   'use strict';
@@ -17,108 +20,139 @@
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
 
-  /* ------------------------------------------------------------ 章节配置
-     主题：人与 AI、AI 与 AI、人与人 —— 三种关系，衍生出万物
-     骨架取自「道生一，一生二，二生三，三生万物」：
-       万物·起点(人) → 一(人与 AI) → 二(AI 与 AI) → 三(人与人) → 三生万物 → 加入
-     粒子形态与之呼应：球云 / 双极 / 双格栅 / 簇群 / 球壳 / 拱门 */
-  const SECTIONS = [
-    {
-      id: 'start', label: '起点',
-      clip: 'assets/vid/origin.mp4', clipMobile: 'assets/vid/m_origin.mp4',
-      still: 'assets/img/poster_origin.jpg',
-      accent: '#4de3ff',
-      eyebrow: '万物 · 起点',
-      title: '一切从一个节点开始',
-      body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。',
-      tags: ['万物', '起点'],
-      scroll: 1.35, overlayEnter: 0, overlayExit: 0.72
+  /* ==========================================================
+     章节骨架：与语言无关的部分（素材路径 / 强调色 / 滚动长度）
+     ========================================================== */
+  const SECTION_BASE = [
+    { id: 'start', clip: 'assets/vid/origin.mp4', clipMobile: 'assets/vid/m_origin.mp4', still: 'assets/img/poster_origin.jpg', accent: '#4de3ff', scroll: 1.35, overlayEnter: 0, overlayExit: 0.72 },
+    { id: 'human-ai', clip: 'assets/vid/ai.mp4', clipMobile: 'assets/vid/m_ai.mp4', still: 'assets/img/poster_ai.jpg', accent: '#a06bff', scroll: 1.40, overlayEnter: 0.02, overlayExit: 0.96 },
+    { id: 'ai-ai', clip: 'assets/vid/agents.mp4', clipMobile: 'assets/vid/m_agents.mp4', still: 'assets/img/poster_agents.jpg', accent: '#ff7bd5', scroll: 1.40, overlayEnter: 0.02, overlayExit: 0.96 },
+    { id: 'human-human', clip: 'assets/vid/human.mp4', clipMobile: 'assets/vid/m_human.mp4', still: 'assets/img/poster_human.jpg', accent: '#ffb765', scroll: 1.40, overlayEnter: 0.02, overlayExit: 0.96 },
+    { id: 'all', clip: 'assets/vid/mesh.mp4', clipMobile: 'assets/vid/m_mesh.mp4', still: 'assets/img/poster_mesh.jpg', accent: '#6bd8ff', scroll: 1.30, overlayEnter: 0.02, overlayExit: 0.96 },
+    { id: 'join', clip: 'assets/vid/join.mp4', clipMobile: 'assets/vid/m_join.mp4', still: 'assets/img/poster_join.jpg', accent: '#eaf6ff', scroll: 1.10, overlayEnter: 0, overlayExit: 1 }
+  ];
+
+  /* ==========================================================
+     文案：两种语言
+     ========================================================== */
+  const I18N = {
+    zh: {
+      htmlLang: 'zh-CN',
+      title: 'Solo & Echo · 人与 AI、AI 与 AI、人与人，犹如三生万物',
+      description: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。',
+      topCta: '加入',
+      hint: '滚动进入 · 移动鼠标，让回声穿过你',
+      sections: [
+        { label: '起点', eyebrow: '万物 · 起点', title: '一切从一个节点开始', body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。', tags: ['万物', '起点'] },
+        { label: '人与 AI', eyebrow: '一 · 人与 AI', title: 'AI 不是工具，而是另一个数字的伙伴', body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。', tags: ['有记忆', '有判断', '有边界'] },
+        { label: 'AI 与 AI', eyebrow: '二 · AI 与 AI', title: '当智能体开始彼此对话', body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。', tags: ['智能体互调', '协作', '接力'] },
+        { label: '人与人', eyebrow: '三 · 人与人', title: '人与人之间，重新回归连接', body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。', tags: ['社群', '信任', '真实关系'] },
+        { label: '万物', eyebrow: '三生万物', title: '犹如三生万物', body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。', tags: ['自生长', '涌现', '开放'] },
+        { label: '加入', eyebrow: '加入我们', title: '让你的回声，被更多节点听见', body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。', tags: [], cta: { primary: '加入', secondary: '回到顶部' } }
+      ],
+      hud: {
+        toggle: '交互面板', density: '粒子密度', camera: '摄像头', gyro: '陀螺仪', shake: '摇一摇',
+        ambient: '环境光', events: '涌现事件', video: '视频层', pulse: '扩散脉冲',
+        note: '摄像头画面仅在本机逐帧计算亮度与运动量，不录制、不上传。',
+        stat: { particles: '粒子', links: '连线', events: '事件', fps: 'FPS' }
+      },
+      messages: {
+        on: '已开启', off: '已关闭',
+        eventsOn: '涌现事件：开', eventsOff: '涌现事件：关',
+        videoOn: '视频层：开', videoOff: '视频层：关（仅保留实时粒子）',
+        pulse: '扩散脉冲', shake: '摇一摇 · 网络扩散',
+        camOn: '摄像头已接管能量与色温',
+        fail: '该能力启动失败，已保持关闭',
+        camDenied: '摄像头权限被拒绝', camNone: '没有找到摄像头设备',
+        camErr: '摄像头启动失败', camFrame: '摄像头帧读取失败'
+      }
     },
-    {
-      id: 'human-ai', label: '人与 AI',
-      clip: 'assets/vid/ai.mp4', clipMobile: 'assets/vid/m_ai.mp4',
-      still: 'assets/img/poster_ai.jpg',
-      accent: '#a06bff',
-      eyebrow: '一 · 人与 AI',
-      title: 'AI 不是工具，而是另一个数字的伙伴',
-      body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。',
-      tags: ['有记忆', '有判断', '有边界'],
-      scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'ai-ai', label: 'AI 与 AI',
-      clip: 'assets/vid/agents.mp4', clipMobile: 'assets/vid/m_agents.mp4',
-      still: 'assets/img/poster_agents.jpg',
-      accent: '#ff7bd5',
-      eyebrow: '二 · AI 与 AI',
-      title: '当智能体开始彼此对话',
-      body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。',
-      tags: ['智能体互调', '协作', '接力'],
-      scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'human-human', label: '人与人',
-      clip: 'assets/vid/human.mp4', clipMobile: 'assets/vid/m_human.mp4',
-      still: 'assets/img/poster_human.jpg',
-      accent: '#ffb765',
-      eyebrow: '三 · 人与人',
-      title: '人与人之间，重新回归连接',
-      body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。',
-      tags: ['社群', '信任', '真实关系'],
-      scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'all', label: '万物',
-      clip: 'assets/vid/mesh.mp4', clipMobile: 'assets/vid/m_mesh.mp4',
-      still: 'assets/img/poster_mesh.jpg',
-      accent: '#6bd8ff',
-      eyebrow: '三生万物',
-      title: '犹如三生万物',
-      body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。',
-      tags: ['自生长', '涌现', '开放'],
-      scroll: 1.3, overlayEnter: 0.02, overlayExit: 0.96
-    },
-    {
-      id: 'join', label: '加入',
-      clip: 'assets/vid/join.mp4', clipMobile: 'assets/vid/m_join.mp4',
-      still: 'assets/img/poster_join.jpg',
-      accent: '#eaf6ff',
-      eyebrow: '加入我们',
-      title: '让你的回声，被更多节点听见',
-      body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。',
-      tags: [],
-      scroll: 1.1, overlayEnter: 0, overlayExit: 1,
-      cta: {
-        primary: { label: '加入', href: '#join' },
-        secondary: { label: '回到顶部', href: '#top' }
+
+    en: {
+      htmlLang: 'en',
+      title: 'Solo & Echo · Human & AI, AI & AI, Human & Human — from three, all things',
+      description: 'Human & AI, AI & AI, human & human. Once all three hold at the same time, new things need no invention — they grow. Nothing here is manufactured; it is brought into being by the relationships themselves.',
+      topCta: 'Join',
+      hint: 'Scroll in · move your mouse, let the echo pass through you',
+      sections: [
+        { label: 'Origin', eyebrow: 'All Things · Origin', title: 'Everything begins\nwith a single node', body: 'The first node is always a person. Connection does not start with a device — it starts when someone opens their mouth and lets a thought out.', tags: ['All things', 'Origin'] },
+        { label: 'Human & AI', eyebrow: 'I · Human & AI', title: 'AI is not a tool,\nbut another\ndigital companion', body: 'Built from digits, never just digits. It has memory, judgment and limits — and it is always there on the other side of your words.', tags: ['Memory', 'Judgment', 'Limits'] },
+        { label: 'AI & AI', eyebrow: 'II · AI & AI', title: 'When agents start\ntalking to each other', body: 'One model calls another to collaborate, to challenge, to hand off. Capability no longer belongs to one model — it belongs to the connection that just happened between two nodes.', tags: ['Agent mesh', 'Collaboration', 'Handoff'] },
+        { label: 'Human & Human', eyebrow: 'III · Human & Human', title: 'Between people,\nconnection returns', body: 'In an age where everyone is already online, what was scarce was never the channel — it is the connection itself. We build for people meeting again, not for people meeting less.', tags: ['Community', 'Trust', 'Real ties'] },
+        { label: 'All Things', eyebrow: 'From three, all things', title: 'From three,\nall things emerge', body: 'Human & AI, AI & AI, human & human — once all three hold at the same time, new things need no invention. They grow. Nothing here is manufactured; it is brought into being by the relationships themselves.', tags: ['Self-growing', 'Emergence', 'Open'] },
+        { label: 'Join', eyebrow: 'Join us', title: 'Let your echo be\nheard by more nodes', body: 'People building AI. Teams working alongside machines. Agents that already connect to one another on their own. Come in and plug your node into the graph.', tags: [], cta: { primary: 'Join', secondary: 'Back to top' } }
+      ],
+      hud: {
+        toggle: 'Controls', density: 'Density', camera: 'Camera', gyro: 'Gyroscope', shake: 'Shake',
+        ambient: 'Ambient light', events: 'Emergence', video: 'Video layer', pulse: 'Pulse',
+        note: 'Camera frames are analyzed on-device for brightness and motion only — never recorded, never uploaded.',
+        stat: { particles: 'nodes', links: 'links', events: 'events', fps: 'FPS' }
+      },
+      messages: {
+        on: 'turned on', off: 'turned off',
+        eventsOn: 'Emergence: on', eventsOff: 'Emergence: off',
+        videoOn: 'Video layer: on', videoOff: 'Video layer: off (live particles only)',
+        pulse: 'Pulse', shake: 'Shake · the network expands',
+        camOn: 'Camera is now driving energy and color',
+        fail: 'Could not start — left switched off',
+        camDenied: 'Camera permission denied', camNone: 'No camera device found',
+        camErr: 'Could not start the camera', camFrame: 'Could not read camera frames'
       }
     }
-  ];
+  };
 
-  const CONNECTORS = [
-    'assets/vid/conn0.mp4', 'assets/vid/conn1.mp4', 'assets/vid/conn2.mp4',
-    'assets/vid/conn3.mp4', 'assets/vid/conn4.mp4'
-  ];
+  /* ------------------------------------------------- 语言状态
+     优先级：?lang=en|zh 参数 > localStorage 记忆 > 默认中文 */
+  const LANG_KEY = 'soloecho.lang';
+  let lang = 'zh';
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'zh' || q === 'en') {
+      lang = q;
+    } else {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === 'zh' || saved === 'en') lang = saved;
+    }
+  } catch (e) { /* 隐私模式下 localStorage 不可用，忽略 */ }
 
-  const CONNECTORS_M = [
-    'assets/vid/m_conn0.mp4', 'assets/vid/m_conn1.mp4', 'assets/vid/m_conn2.mp4',
-    'assets/vid/m_conn3.mp4', 'assets/vid/m_conn4.mp4'
-  ];
+  const T = () => I18N[lang];
+
+  /* ------------------------------------------------- 章节配置 */
+  function buildSections(l) {
+    const C = I18N[l];
+    return SECTION_BASE.map((b, i) => {
+      const s = C.sections[i];
+      return {
+        id: b.id, label: s.label,
+        clip: b.clip, clipMobile: b.clipMobile, still: b.still,
+        accent: b.accent,
+        eyebrow: s.eyebrow, title: s.title, body: s.body, tags: s.tags,
+        scroll: b.scroll, overlayEnter: b.overlayEnter, overlayExit: b.overlayExit,
+        cta: s.cta
+      };
+    });
+  }
 
   /* ------------------------------------------------- 挂载插件的滚动引擎 */
   const world = document.getElementById('world');
   mountScrollWorld(world, {
     brand: { name: 'Solo & Echo', href: '#top' },
-    cta: { label: '加入', href: '#join' },
-    hint: '滚动进入 · 移动鼠标，让回声穿过你',
+    cta: { label: I18N[lang].topCta, href: '#join' },
+    hint: I18N[lang].hint,
     nav: true,
     atmosphere: true,
     diveScroll: 1.3,
     connScroll: 0.5,
     crossfade: 0.14,
-    sections: SECTIONS,
-    connectors: CONNECTORS,
-    connectorsMobile: CONNECTORS_M
+    sections: buildSections(lang),
+    connectors: [
+      'assets/vid/conn0.mp4', 'assets/vid/conn1.mp4', 'assets/vid/conn2.mp4',
+      'assets/vid/conn3.mp4', 'assets/vid/conn4.mp4'
+    ],
+    connectorsMobile: [
+      'assets/vid/m_conn0.mp4', 'assets/vid/m_conn1.mp4', 'assets/vid/m_conn2.mp4',
+      'assets/vid/m_conn3.mp4', 'assets/vid/m_conn4.mp4'
+    ]
   });
 
   /* 引擎把轨道高度设成 (总长 + 1vh)，于是"最大滚动位置"正好等于最后一段的结束点，
@@ -143,11 +177,9 @@
 
   function buildTimeline() {
     const segs = [];
-    SECTIONS.forEach((s, i) => {
+    SECTION_BASE.forEach((s, i) => {
       segs.push({ kind: 'dive', si: i, w: s.scroll || DIVE_W });
-      if (i < SECTIONS.length - 1 && CONNECTORS[i]) {
-        segs.push({ kind: 'conn', si: i, w: CONN_W });
-      }
+      if (i < SECTION_BASE.length - 1) segs.push({ kind: 'conn', si: i, w: CONN_W });
     });
     const vh = window.innerHeight;
     let off = 0;
@@ -166,7 +198,7 @@
     let a, b, mix;
     if (seg.kind === 'dive') {
       const hasConn = ci + 1 < SEGMENTS.length && SEGMENTS[ci + 1].kind === 'conn';
-      a = seg.si; b = Math.min(SECTIONS.length - 1, seg.si + 1);
+      a = seg.si; b = Math.min(SECTION_BASE.length - 1, seg.si + 1);
       // 章节尾段预热下一章；有连接段时只预热到 0.35，接上连接段继续
       const pre = hasConn ? 0.35 : 1.0;
       mix = pre * Math.max(0, Math.min(1, (p - 0.78) / 0.22));
@@ -200,7 +232,7 @@
   window.addEventListener('pointermove', onPointer, { passive: true });
   window.addEventListener('pointerleave', () => field.setPointer(-9999, -9999, 0, 0, false));
   window.addEventListener('pointerdown', (e) => {
-    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud')) return;
+    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang')) return;
     field.setPointer(e.clientX, e.clientY, 0, 0, true);
     field.addShock(e.clientX, e.clientY, 1);
   }, { passive: true });
@@ -220,9 +252,8 @@
   const sensors = window.SWSensors.create(field, {
     onState: () => updateHudState(),
     onShake: () => {
-      const r = Math.min(window.innerWidth, window.innerHeight);
       field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.5, 1.2);
-      flash('摇一摇 · 网络扩散');
+      flash(T().messages.shake);
     }
   });
 
@@ -231,27 +262,27 @@
   hud.className = 'sw-hud';
   hud.innerHTML = `
     <button class="sw-hud__toggle" type="button" aria-expanded="false">
-      <span class="sw-hud__dot"></span><span>交互面板</span>
+      <span class="sw-hud__dot"></span><span data-i18n="toggle"></span>
     </button>
     <div class="sw-hud__panel" hidden>
       <div class="sw-hud__row">
-        <label for="sw-density">粒子密度</label>
+        <label for="sw-density" data-i18n="density"></label>
         <input id="sw-density" type="range" min="20" max="100" value="${coarse ? 50 : 78}">
         <output id="sw-density-out">${coarse ? 50 : 78}</output>
       </div>
       <div class="sw-hud__row sw-hud__row--btns">
-        <button type="button" data-sensor="camera">摄像头</button>
-        <button type="button" data-sensor="orientation">陀螺仪</button>
-        <button type="button" data-sensor="motion">摇一摇</button>
-        <button type="button" data-sensor="ambient">环境光</button>
+        <button type="button" data-sensor="camera" data-i18n="camera"></button>
+        <button type="button" data-sensor="orientation" data-i18n="gyro"></button>
+        <button type="button" data-sensor="motion" data-i18n="shake"></button>
+        <button type="button" data-sensor="ambient" data-i18n="ambient"></button>
       </div>
       <div class="sw-hud__row sw-hud__row--btns">
-        <button type="button" data-toggle="events">涌现事件</button>
-        <button type="button" data-toggle="video">视频层</button>
-        <button type="button" data-action="shock">扩散脉冲</button>
+        <button type="button" data-toggle="events" data-i18n="events"></button>
+        <button type="button" data-toggle="video" data-i18n="video"></button>
+        <button type="button" data-action="shock" data-i18n="pulse"></button>
       </div>
       <div class="sw-hud__stat" id="sw-stat">—</div>
-      <p class="sw-hud__note">摄像头画面仅在本机逐帧计算亮度与运动量，不录制、不上传。</p>
+      <p class="sw-hud__note" data-i18n="note"></p>
       <p class="sw-hud__msg" id="sw-msg"></p>
     </div>`;
   document.body.appendChild(hud);
@@ -297,14 +328,14 @@
   hud.querySelectorAll('[data-sensor]').forEach(btn => {
     const which = btn.dataset.sensor;
     const s = sensors[which];
-    if (!s || !s.supported) { btn.disabled = true; btn.title = '当前设备不支持'; return; }
+    if (!s || !s.supported) { btn.disabled = true; btn.title = '当前设备不支持 / not supported on this device'; return; }
     btn.addEventListener('click', async () => {
       btn.classList.add('is-loading');
       const ok = await s.toggle();
       btn.classList.remove('is-loading');
       btn.classList.toggle('is-on', !!s.active);
-      if (!ok) msg((s.error || '该能力启动失败') + '，已保持关闭');
-      else msg(s.active ? '已开启：' + btn.textContent : '已关闭：' + btn.textContent, 'ok');
+      if (!ok) msg((s.error || T().messages.fail) + '，' + (lang === 'zh' ? '已保持关闭' : 'left off'), null);
+      else msg(s.active ? T().messages.on + '：' + btn.textContent : T().messages.off + '：' + btn.textContent, 'ok');
       updateHudState();
     });
   });
@@ -313,7 +344,7 @@
     const on = !e.currentTarget.classList.contains('is-on');
     e.currentTarget.classList.toggle('is-on', on);
     field.setEvents(on);
-    msg(on ? '涌现事件：开' : '涌现事件：关');
+    msg(on ? T().messages.eventsOn : T().messages.eventsOff);
   });
   hud.querySelector('[data-toggle="events"]').classList.add('is-on');
 
@@ -323,17 +354,17 @@
     const on = !e.currentTarget.classList.contains('is-on');
     e.currentTarget.classList.toggle('is-on', on);
     document.documentElement.classList.toggle('sw-novideo', !on);
-    msg(on ? '视频层：开' : '视频层：关（仅保留实时粒子）');
+    msg(on ? T().messages.videoOn : T().messages.videoOff);
   });
 
   hud.querySelector('[data-action="shock"]').addEventListener('click', () => {
     field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.5, 1.4);
-    flash('扩散脉冲');
+    flash(T().messages.pulse);
   });
 
   function updateHudState() {
     const st = sensors.state;
-    if (st.camera) msg('摄像头已接管能量与色温', 'ok');
+    if (st.camera) msg(T().messages.camOn, 'ok');
   }
 
   /* --------------------------------------------------------- 状态读数 */
@@ -344,17 +375,106 @@
     statTick = now;
     const s = field.stats();
     const st = sensors.state;
+    const K = T().hud.stat;
     const bits = [
-      '粒子 ' + s.particles,
-      '连线 ' + s.lines,
-      '事件 ' + s.events,
-      s.fps + ' FPS'
+      K.particles + ' ' + s.particles,
+      K.links + ' ' + s.lines,
+      K.events + ' ' + s.events,
+      s.fps + ' ' + K.fps
     ];
-    if (st.camera) bits.push('摄像头 ' + Math.round(st.motionLevel * 100) + '%');
-    if (st.orientation) bits.push('陀螺仪');
-    hudStat.textContent = bits.join(' · ');
+    if (st.camera) bits.push(st.camera ? 'CAM ' + Math.round(st.motionLevel * 100) + '%' : '');
+    if (st.orientation) bits.push('GYRO');
+    hudStat.textContent = bits.filter(Boolean).join(' · ');
   }
   requestAnimationFrame(statsLoop);
+
+  /* ==========================================================
+     语言切换：原地改写 DOM（不重挂载、不丢滚动位置）
+     ========================================================== */
+  const topbar = world.querySelector('.sw-topbar');
+  const topCta = topbar ? topbar.querySelector('.sw-topcta') : null;
+  const rightGroup = document.createElement('div');
+  rightGroup.className = 'sw-topright';
+
+  const langToggle = document.createElement('div');
+  langToggle.className = 'sw-lang';
+  langToggle.setAttribute('role', 'group');
+  langToggle.setAttribute('aria-label', 'Language / 语言');
+  langToggle.innerHTML =
+    '<button type="button" data-lang="zh" lang="zh-CN">中</button>' +
+    '<button type="button" data-lang="en" lang="en">EN</button>';
+  rightGroup.appendChild(langToggle);
+  if (topCta) rightGroup.appendChild(topCta);
+  if (topbar) topbar.appendChild(rightGroup);
+
+  function applyLang(next, persist) {
+    if (!I18N[next]) return;
+    lang = next;
+    const C = I18N[lang];
+
+    document.documentElement.lang = C.htmlLang;
+    document.title = C.title;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', C.description);
+
+    // 品牌（双语同名）
+    const brandName = world.querySelector('.sw-brand__name');
+    if (brandName) brandName.textContent = 'Solo & Echo';
+    if (topCta) topCta.textContent = C.topCta;
+
+    // 滚动提示
+    const hintText = world.querySelector('.sw-hint span');
+    if (hintText) hintText.textContent = C.hint;
+
+    // 顶部导航胶囊
+    const navItems = world.querySelectorAll('.sw-nav__item');
+    navItems.forEach((b, i) => { const s = C.sections[i]; if (s) b.textContent = s.label; });
+
+    // 右侧章节圆点标签
+    const dotLabels = world.querySelectorAll('.sw-route__label');
+    dotLabels.forEach((el, i) => { const s = C.sections[i]; if (s) el.textContent = s.label; });
+
+    // 文案层
+    const copies = world.querySelectorAll('.sw-copy');
+    copies.forEach((c, i) => {
+      const s = C.sections[i];
+      if (!s) return;
+      const eyebrow = c.querySelector('.sw-copy__eyebrow');
+      if (eyebrow) eyebrow.textContent = s.eyebrow;
+      const title = c.querySelector('.sw-copy__title');
+      if (title) title.textContent = s.title;
+      const body = c.querySelector('.sw-copy__body');
+      if (body) body.textContent = s.body;
+      const tags = c.querySelectorAll('.sw-copy__tags li');
+      tags.forEach((li, k) => { if (s.tags[k] != null) li.textContent = s.tags[k]; });
+      const btns = c.querySelectorAll('.sw-copy__cta .sw-btn');
+      if (s.cta && btns.length) {
+        if (btns[0]) btns[0].textContent = s.cta.primary;
+        if (btns[1]) btns[1].textContent = s.cta.secondary;
+      }
+    });
+
+    // HUD 文案
+    hud.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.dataset.i18n;
+      if (C.hud[k] != null) el.textContent = C.hud[k];
+    });
+
+    // 按钮状态
+    langToggle.querySelectorAll('button').forEach(b => b.classList.toggle('is-on', b.dataset.lang === lang));
+
+    if (persist !== false) {
+      try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* 忽略 */ }
+    }
+  }
+
+  langToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-lang]');
+    if (!btn) return;
+    applyLang(btn.dataset.lang, true);
+  });
+
+  applyLang(lang, false);
 
   /* --------------------------------------------------------- 滚动同步 */
   function scrollLoop() {
@@ -403,9 +523,4 @@
     if (document.hidden) field.stop();
     else { updateChapter(); field.start(); }
   });
-
-  /* 首屏手势：iOS 需要一次用户交互才让视频解码（引擎内部也处理了一份） */
-  window.addEventListener('pointerdown', function prime() {
-    field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.62, 0.9);
-  }, { once: true, passive: true });
 })();

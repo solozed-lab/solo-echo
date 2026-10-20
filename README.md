@@ -31,12 +31,15 @@
 ## 跑起来
 
 ```bash
-cd site && python3 -m http.server 8899
+python3 tools/serve.py 8899 site
 # 打开 http://127.0.0.1:8899/
 ```
 
 必须走 HTTP（视频层用 fetch 加载 blob，`file://` 会被 CORS 拦掉）。
 摄像头需要安全上下文：`localhost` 或 `https` 均可。
+
+> 用 `tools/serve.py`（多线程）而不是 `python3 -m http.server`（单线程）：
+> 页面会并发拉 11 段视频，单线程服务器会排队，偶发 `ERR_CONNECTION_RESET`。
 
 ## 三层结构
 
@@ -48,6 +51,26 @@ cd site && python3 -m http.server 8899
 
 视频是死的，粒子是活的 —— 所以所有互动都发生在 L1，视频只负责给背景做电影级纵深。
 即使视频加载失败、reduced-motion 或没有 WebGL2，L1+L2 仍构成完整可读页面。
+
+## 中英双语
+
+顶栏右侧 `中 / EN` 开关，切换**不重挂载、不丢滚动位置**——插件在挂载时把文案写进 DOM，
+之后不再碰文字，所以语言层 = 原地改写 DOM 文本（`world.js` 的 `applyLang()`）。
+
+| 覆盖范围 | 说明 |
+|---|---|
+| 六章 eyebrow / 标题 / 正文 / 标签 | 中英各一套，结构一一对应（标签数量一致，无需重建 DOM） |
+| 顶部导航胶囊、右侧章节圆点标签 | 同步切换 |
+| 顶栏 CTA、终屏按钮、滚动提示 | 同步切换 |
+| HUD 面板全部标签、隐私说明、实时读数 | `data-i18n` 驱动，运行时消息也走语言字典 |
+| `<title>` / `meta description` / `<html lang>` | 同步切换，利于 SEO |
+
+**优先级**：`?lang=en` / `?lang=zh` 参数 > localStorage 记忆 > 默认中文。
+参数形式方便分享指定语言的链接，也便于验收。切换后写入 localStorage，下次访问沿用。
+
+英文版的 eyebrow 会被插件的 `text-transform:uppercase` 渲染成全大写（`ALL THINGS · ORIGIN`），
+正好落在"机器的声音"那一侧；中文版不受影响。英文标题用 `\n` 显式断行
+（CSS `white-space: pre-line`），中文标题自然折行。
 
 ## 交互面板：每一项做什么
 

@@ -46,7 +46,11 @@ body { overflow-x: hidden; }
   letter-spacing: -0.015em;
   font-weight: 700;
   font-size: clamp(1.9rem, 3.4vw, 3rem);
+  white-space: pre-line;   /* 英文标题里的 \n 需要保留换行 */
 }
+
+/* 英文标题更长：收一档字号，否则会出现孤字行 */
+html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
 
 /* 引擎用 transform 做视差，会盖掉 CSS 的垂直居中 —— 这里手动上移，
    保证 720p 高度下文案块不越过视口底边 */
@@ -129,6 +133,29 @@ body { overflow-x: hidden; }
   pointer-events: none;
   display: block;
   mix-blend-mode: screen;
+}
+
+/* ------------------------------------------------------ 语言切换 */
+.sw-topright { display: flex; align-items: center; gap: 12px; }
+.sw-lang {
+  display: inline-flex; align-items: center;
+  border: 1px solid rgba(234, 246, 255, 0.16);
+  border-radius: 999px; overflow: hidden;
+  background: rgba(8, 13, 24, 0.55);
+  backdrop-filter: blur(12px);
+}
+.sw-lang button {
+  font: inherit; font-size: 0.74rem; letter-spacing: 0.04em;
+  color: rgba(234, 246, 255, 0.6);
+  background: transparent; border: 0;
+  padding: 9px 13px; cursor: pointer;
+  transition: color .2s, background .2s;
+}
+.sw-lang button + button { border-left: 1px solid rgba(234, 246, 255, 0.12); }
+.sw-lang button:hover:not(.is-on) { color: #fff; }
+.sw-lang button.is-on {
+  color: #04070e;
+  background: var(--sw-accent);
 }
 
 /* ------------------------------------------------------------- HUD */
