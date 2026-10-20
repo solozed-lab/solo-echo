@@ -13,16 +13,32 @@
 **部署链路**：GitHub `solozed-lab/solo-echo` → Cloudflare Pages（Git 集成，
 生产分支 `main`，开 PR 预览部署）→ 自定义域名 `solozed.com`。
 
-Pages 项目的构建配置：无构建命令，输出目录 `site`。
+Pages 项目的构建配置（API 建项目时必须显式给，否则会部署**仓库根**而不是 `site/`，
+导致所有视频/图片 404、背景层静默消失）：
+
+```json
+{ "build_config": { "build_command": "", "root_dir": "", "destination_dir": "site" },
+  "production_branch": "main",
+  "source": { "type": "github", "config": { "owner": "solozed-lab", "repo_name": "solo-echo" } } }
+```
+
+> 两个容易踩的字段名：输出目录是 **`destination_dir`**（写 `output_dir` 会被 API
+> 静默丢弃）；仓库名是 **`repo_name`**（写 `repo` 会报
+> "Missing project source configuration"）。
 
 > 自定义域名的 DNS 记录（CNAME → `solo-echo.pages.dev`）需要在 Cloudflare 控制台
-> 添加：DNS → Records。`wrangler` 的 OAuth token 没有 DNS 权限，API 改不了。
+> 添加：DNS → Records。`wrangler` 的 OAuth token 只有 `zone(read)` / `pages(write)`，
+> 没有 DNS 权限，API 改不了。
 
 手动部署（不依赖 Git 集成时的备用路径）：
 
 ```bash
 npx wrangler pages deploy site --project-name=solo-echo --branch=main
 ```
+
+> 改完仓库内容后，除了看首页，**务必全量校验一遍资源**（45 个文件应全部 200）：
+> Git 构建的产物目录配错时，首页往往还是好的（引擎会退回 poster），
+> 但视频层已经死了 —— 只看首页会漏掉这种故障。
 
 叙事骨架取自「**道生一，一生二，二生三，三生万物**」：
 
