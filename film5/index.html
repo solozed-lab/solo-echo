@@ -163,9 +163,13 @@ V:VLN inst=violins role=melody gain=0.7
   const ROLE_COL = [null, hex(V.cHuman), hex(V.cAI), hex(V.cAI2), hex(V.cWarm), [1,1,1]];
   const ACCENT = { start: hex(V.cHuman), one: hex(V.cAI), two: hex(V.cAI2), three: hex(V.cWarm), all: hex(V.cHuman), join: hex(V.cAI) };
 
+  const DRIFT_GAIN = 4.2;   // 5 分钟尺度上，形态停住后粒子仍要"活着"
   const drift = (i, t, amp, sp) => {
     const a = pu[i] * TAU, b = pv[i] * TAU;
-    return [Math.cos(a + t * sp) * amp, Math.sin(b * 1.3 + t * sp * .82) * amp];
+    return [
+      (Math.cos(a + t * sp) * amp + Math.cos(b + t * sp * 1.63) * amp * .7) * DRIFT_GAIN,
+      (Math.sin(b * 1.3 + t * sp * .82) * amp + Math.sin(a * 1.87 + t * sp * 1.31) * amp * .7) * DRIFT_GAIN
+    ];
   };
   const sideOf = i => (role[i] === 2 || role[i] === 3) ? -1 : (role[i] === 1 ? 1 : (pu[i] < .52 ? -1 : 1));
 
@@ -297,12 +301,14 @@ V:VLN inst=violins role=melody gain=0.7
     const d = drift(i, t, 12, .5);
     if (mode === 0) {
       // 三道流光从三个方向飞入（沿射线拉长，合流时收紧）
-      const k = clamp01(t / 11);
+      const k = clamp01(t / 7);
       const lane = role[i] === 1 ? 0 : (role[i] === 2 || role[i] === 3) ? 1 : 2;
       const a = lane * 2.0944;
       const rr = mix(1020, 430, k);
-      const along = (pv[i] - .5) * 300 * (1 - k * .55);
-      const wide = (pw[i] - .5) * 130;
+      // 沿射线持续流动：粒子不是静止的一团，而是真的在"流"
+      const flow = (t * .8 + pv[i]) % 1;
+      const along = (flow - .5) * 900 * (1 - k * .45);   // 拉长成流线
+      const wide = (pw[i] - .5) * 72;
       const ca = Math.cos(a), sa = Math.sin(a);
       return [ca * (rr + along) - sa * wide, sa * (rr + along) * .82 + ca * wide * .82];
     }
@@ -426,7 +432,17 @@ V:VLN inst=violins role=melody gain=0.7
       const cur = SH[sc.shape][v](i, vt);
       return [mix(prev[0], cur[0], b), mix(prev[1], cur[1], b)];
     }
-    return SH[sc.shape][v](i, vt);
+    const p = SH[sc.shape][v](i, vt);
+    // 整场呼吸 + 双向行波 + 每颗粒子自己的轨道
+    // 5 分钟尺度上这是关键：形态会"停住"，但场必须一直活着
+    const k = 1 + Math.sin(t * .23) * .07;
+    const wy = Math.sin(t * 1.15 + p[1] * .006) * 18;
+    const wx = Math.cos(t * .87 + p[0] * .005) * 14;
+    const ph = pz[i] * TAU;
+    const orb = 5 + pz[i] * 11;
+    const ox = Math.cos(ph + t * (.5 + pu[i] * .9)) * orb;
+    const oy = Math.sin(ph * 1.3 + t * (.45 + pv[i] * .8)) * orb;
+    return [p[0] * k + wx + ox, p[1] * k + wy + oy];
   }
 
   /* ---------------- 相机 ---------------- */
@@ -471,12 +487,6 @@ V:VLN inst=violins role=melody gain=0.7
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
 
-    for (let i = 0; i < N; i++) {
-      const p = posOf(i, t);
-      xs[i] = (p[0] - camX) * zoom + W / 2;
-      ys[i] = (p[1] - camY) * zoom + H / 2;
-      al[i] = (xs[i] < -80 || xs[i] > W + 80 || ys[i] < -80 || ys[i] > H + 80) ? 0 : (role[i] === 5 ? 1 : role[i] === 0 ? .55 : .78);
-    }
 
     head.fill(-1);
     for (let i = 0; i < N; i++) {
