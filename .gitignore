@@ -16,3 +16,7 @@ film/*.png
 .DS_Store
 Thumbs.db
 node_modules/
+film5/vendor/
+film5/out/
+film5/.om/
+film5/*.png
