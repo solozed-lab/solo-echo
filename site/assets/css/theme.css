@@ -284,19 +284,22 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   position: fixed; inset: 0; z-index: 80;
   display: grid; place-items: center;
   padding: 24px;
-  opacity: 0; visibility: hidden;
-  transition: opacity .35s ease, visibility .35s;
+  pointer-events: none;
 }
-.sw-modal.is-open { opacity: 1; visibility: visible; }
+.sw-modal.is-open { pointer-events: auto; }
 
 .sw-modal__backdrop {
   position: absolute; inset: 0;
-  /* 压得别太死：背后的网络要隐约可见 —— 门还没开，但网络一直都在 */
-  background: radial-gradient(120% 90% at 50% 40%, rgba(5, 9, 18, .56), rgba(2, 4, 10, .80));
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  /* 不用 backdrop-filter：全屏模糊叠在实时 WebGL 画布上，每帧都要把背景
+     重新糊一遍 → 掉帧 + 模糊半径瞬间生效 → 观感上"啪"地一下，很突兀。
+     改成渐变压暗：背后的网络依然清晰活着，也零掉帧。 */
+  background:
+    radial-gradient(86% 68% at 50% 42%, rgba(5, 9, 18, .58), rgba(2, 4, 10, .88));
+  opacity: 0;
+  transition: opacity .42s cubic-bezier(.22, .61, .36, 1);
   cursor: pointer;
 }
+.sw-modal.is-open .sw-modal__backdrop { opacity: 1; }
 
 .sw-modal__panel {
   position: relative;
@@ -311,19 +314,33 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
     0 40px 120px rgba(0, 0, 0, .72),
     0 0 90px rgba(77, 227, 255, .10),
     inset 0 1px 0 rgba(255, 255, 255, .06);
-  transform: translateY(16px) scale(.965);
+  transform: translateY(18px) scale(.975);
   opacity: 0;
-  transition: transform .42s cubic-bezier(.2, .8, .2, 1), opacity .35s ease;
+  transition:
+    opacity .5s cubic-bezier(.22, .61, .36, 1),
+    transform .58s cubic-bezier(.22, .61, .36, 1);
 }
-.sw-modal.is-open .sw-modal__panel { transform: none; opacity: 1; }
+/* 打开时让面板晚于遮罩一点点出现（错峰），关闭时立刻退场 */
+.sw-modal.is-open .sw-modal__panel {
+  transform: none;
+  opacity: 1;
+  transition-delay: 90ms, 90ms;
+}
 
-/* 顶部三色细线 = 三种关系（人 / AI / 万物） */
+/* 顶部三色细线 = 三种关系（人 / AI / 万物）—— 从中间向两侧"画"出来 */
 .sw-modal__panel::before {
   content: "";
   position: absolute; top: 0; left: 22px; right: 22px; height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--sw-cyan), var(--sw-violet) 52%, var(--sw-gold));
+  transform: scaleX(.35);
+  opacity: 0;
+  transition: transform .62s cubic-bezier(.22, .61, .36, 1), opacity .45s ease;
+}
+.sw-modal.is-open .sw-modal__panel::before {
+  transform: scaleX(1);
   opacity: .9;
+  transition-delay: 150ms, 150ms;
 }
 
 .sw-modal__close {
@@ -428,7 +445,12 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
     bottom: auto;
     width: min(280px, calc(100vw - 24px));
   }
-  .sw-hint { bottom: calc(74px + env(safe-area-inset-bottom)); }
+  /* 滚动提示挪到顶部（品牌栏下方）：英文提示会折成两行，
+     放底部会压住底部锚定的正文 */
+  .sw-hint {
+    top: calc(76px + env(safe-area-inset-top));
+    bottom: auto;
+  }
 }
 
 /* --------------------------------------------- 降低动效偏好 */
