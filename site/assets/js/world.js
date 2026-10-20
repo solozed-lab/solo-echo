@@ -40,8 +40,8 @@
       still: 'assets/img/poster_ai.jpg',
       accent: '#a06bff',
       eyebrow: '一 · 人与 AI',
-      title: 'AI 不是工具，是另一个在场的人',
-      body: '它有记忆，有判断，有偏好，也有边界。回应你的不再是一段话，而是一个持续存在的另一方。',
+      title: 'AI 不是工具，而是另一个数字的伙伴',
+      body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。',
       tags: ['有记忆', '有判断', '有边界'],
       scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
     },
@@ -62,8 +62,8 @@
       still: 'assets/img/poster_human.jpg',
       accent: '#ffb765',
       eyebrow: '三 · 人与人',
-      title: '人与人之间，重新长出连接',
-      body: '在一个人人都在线的时代，真正稀缺的依然是信任。我们把技术用在让人重新相遇的地方，而不是让相遇变少。',
+      title: '人与人之间，重新回归连接',
+      body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。',
       tags: ['社群', '信任', '真实关系'],
       scroll: 1.4, overlayEnter: 0.02, overlayExit: 0.96
     },
@@ -72,9 +72,9 @@
       clip: 'assets/vid/mesh.mp4', clipMobile: 'assets/vid/m_mesh.mp4',
       still: 'assets/img/poster_mesh.jpg',
       accent: '#6bd8ff',
-      eyebrow: '万物',
-      title: '三种关系，长出万物',
-      body: '人与 AI、AI 与 AI、人与人——当这三种连接同时成立，新的东西不需要被发明，它自己会生长出来。',
+      eyebrow: '三生万物',
+      title: '犹如三生万物',
+      body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。',
       tags: ['自生长', '涌现', '开放'],
       scroll: 1.3, overlayEnter: 0.02, overlayExit: 0.96
     },
@@ -89,7 +89,7 @@
       tags: [],
       scroll: 1.1, overlayEnter: 0, overlayExit: 1,
       cta: {
-        primary: { label: '申请加入', href: '#join' },
+        primary: { label: '加入', href: '#join' },
         secondary: { label: '回到顶部', href: '#top' }
       }
     }
@@ -108,8 +108,8 @@
   /* ------------------------------------------------- 挂载插件的滚动引擎 */
   const world = document.getElementById('world');
   mountScrollWorld(world, {
-    brand: { name: 'ECHO 回声', href: '#top' },
-    cta: { label: '加入回声', href: '#join' },
+    brand: { name: 'SOLOECHO', href: '#top' },
+    cta: { label: '加入', href: '#join' },
     hint: '滚动进入 · 移动鼠标，让回声穿过你',
     nav: true,
     atmosphere: true,
