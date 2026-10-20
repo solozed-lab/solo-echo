@@ -22,6 +22,22 @@ Pages 项目的构建配置（API 建项目时必须显式给，否则会部署*
   "source": { "type": "github", "config": { "owner": "solozed-lab", "repo_name": "solo-echo" } } }
 ```
 
+**控制台里对应的四个字段应该是**：
+
+| 字段 | 值 |
+|---|---|
+| Framework preset | None |
+| Build command（构建命令） | **留空**（或 `exit 0`） |
+| Build output directory（输出目录） | `site` |
+| Root directory（根目录） | 留空 |
+
+> ⚠️ 构建命令**不要填 `npx wrangler deploy`** —— 那是 **Workers** 的命令，
+> 在 Pages 项目上会报 "Missing entry-point to Worker script or to assets directory"。
+> Pages 要用 `npx wrangler pages deploy`，但 Git 集成场景根本不需要部署命令：
+> 留空即可，Pages 会自己把输出目录当静态资源上传。
+> 同理，不要在仓库里加 `package.json` 的 `build` 脚本 —— 框架自动探测可能
+> 把它当成构建命令。
+
 > 两个容易踩的字段名：输出目录是 **`destination_dir`**（写 `output_dir` 会被 API
 > 静默丢弃）；仓库名是 **`repo_name`**（写 `repo` 会报
 > "Missing project source configuration"）。
