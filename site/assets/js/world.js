@@ -20,7 +20,7 @@
   /* ------------------------------------------------------------ 章节配置
      主题：人与 AI、AI 与 AI、人与人 —— 三种关系，衍生出万物
      骨架取自「道生一，一生二，二生三，三生万物」：
-       道(起点·人) → 一(人与 AI) → 二(AI 与 AI) → 三(人与人) → 万物 → 加入
+       万物·起点(人) → 一(人与 AI) → 二(AI 与 AI) → 三(人与人) → 三生万物 → 加入
      粒子形态与之呼应：球云 / 双极 / 双格栅 / 簇群 / 球壳 / 拱门 */
   const SECTIONS = [
     {
@@ -28,10 +28,10 @@
       clip: 'assets/vid/origin.mp4', clipMobile: 'assets/vid/m_origin.mp4',
       still: 'assets/img/poster_origin.jpg',
       accent: '#4de3ff',
-      eyebrow: '道 · 起点',
+      eyebrow: '万物 · 起点',
       title: '一切从一个节点开始',
       body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。',
-      tags: ['道', '起点'],
+      tags: ['万物', '起点'],
       scroll: 1.35, overlayEnter: 0, overlayExit: 0.72
     },
     {
