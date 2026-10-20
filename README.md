@@ -3,6 +3,22 @@
 > 人与 AI、AI 与 AI、人与人 —— 当三种关系同时成立，新的东西不需要被发明，它自己生长出来。
 > 万物不是被造出来的，是被关系带出来的。
 
+| | |
+|---|---|
+| 线上 | **https://solo-echo.pages.dev/** |
+| 仓库 | https://github.com/solozed-lab/solo-echo |
+| 部署 | Cloudflare Pages（项目 `solo-echo`，生产分支 `main`） |
+
+更新线上版本：
+
+```bash
+npx wrangler pages deploy site --project-name=solo-echo --branch=main
+```
+
+> 若要改成 Git 自动部署（推 main 即上线）：在 Cloudflare 控制台
+> Workers & Pages → solo-echo → Settings → Builds & deployments → Connect to Git，
+> 构建命令留空，输出目录填 `site`。
+
 叙事骨架取自「**道生一，一生二，二生三，三生万物**」：
 
 | 章节标记 | 章节 | 关系 | 粒子形态 | 强调色 |
