@@ -6,18 +6,23 @@
 | | |
 |---|---|
 | 线上 | **https://solo-echo.pages.dev/** |
+| 正式域名 | **https://solozed.com** / https://www.solozed.com |
 | 仓库 | https://github.com/solozed-lab/solo-echo |
-| 部署 | Cloudflare Pages（项目 `solo-echo`，生产分支 `main`） |
+| 部署 | Cloudflare Pages（项目 `solo-echo`）——**已连接 GitHub**，推 `main` 即自动上线 |
 
-更新线上版本：
+**部署链路**：GitHub `solozed-lab/solo-echo` → Cloudflare Pages（Git 集成，
+生产分支 `main`，开 PR 预览部署）→ 自定义域名 `solozed.com`。
+
+Pages 项目的构建配置：无构建命令，输出目录 `site`。
+
+> 自定义域名的 DNS 记录（CNAME → `solo-echo.pages.dev`）需要在 Cloudflare 控制台
+> 添加：DNS → Records。`wrangler` 的 OAuth token 没有 DNS 权限，API 改不了。
+
+手动部署（不依赖 Git 集成时的备用路径）：
 
 ```bash
 npx wrangler pages deploy site --project-name=solo-echo --branch=main
 ```
-
-> 若要改成 Git 自动部署（推 main 即上线）：在 Cloudflare 控制台
-> Workers & Pages → solo-echo → Settings → Builds & deployments → Connect to Git，
-> 构建命令留空，输出目录填 `site`。
 
 叙事骨架取自「**道生一，一生二，二生三，三生万物**」：
 
