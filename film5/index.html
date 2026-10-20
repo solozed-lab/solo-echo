@@ -193,9 +193,9 @@ V:VLN inst=violins role=melody gain=0.7
   SH.bipolar = [
     // v0 分开：两簇离得很远
     (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 185;
+      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 175;
       const d = drift(i, t, 20, .55);
-      return [s * 430 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
+      return [s * 360 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
     },
     // v1 桥接：中间长出一条连线
     (i, t) => {
@@ -487,6 +487,12 @@ V:VLN inst=violins role=melody gain=0.7
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
 
+    for (let i = 0; i < N; i++) {
+      const p = posOf(i, t);
+      xs[i] = (p[0] - camX) * zoom + W / 2;
+      ys[i] = (p[1] - camY) * zoom + H / 2;
+      al[i] = (xs[i] < -80 || xs[i] > W + 80 || ys[i] < -80 || ys[i] > H + 80) ? 0 : (role[i] === 5 ? 1 : role[i] === 0 ? .55 : .78);
+    }
 
     head.fill(-1);
     for (let i = 0; i < N; i++) {
