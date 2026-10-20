@@ -277,6 +277,130 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   100% { opacity: 0; transform: translate(-50%,-50%) scale(1.08); letter-spacing: .5em; }
 }
 
+/* ==========================================================
+   「加入」弹框 —— 社区尚未开放
+   ========================================================== */
+.sw-modal {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center;
+  padding: 24px;
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s ease, visibility .35s;
+}
+.sw-modal.is-open { opacity: 1; visibility: visible; }
+
+.sw-modal__backdrop {
+  position: absolute; inset: 0;
+  /* 压得别太死：背后的网络要隐约可见 —— 门还没开，但网络一直都在 */
+  background: radial-gradient(120% 90% at 50% 40%, rgba(5, 9, 18, .56), rgba(2, 4, 10, .80));
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  cursor: pointer;
+}
+
+.sw-modal__panel {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 36px 34px 28px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(13, 19, 34, .97), rgba(6, 10, 20, .98));
+  border: 1px solid rgba(234, 246, 255, 0.13);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, .72),
+    0 0 90px rgba(77, 227, 255, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+  transform: translateY(16px) scale(.965);
+  opacity: 0;
+  transition: transform .42s cubic-bezier(.2, .8, .2, 1), opacity .35s ease;
+}
+.sw-modal.is-open .sw-modal__panel { transform: none; opacity: 1; }
+
+/* 顶部三色细线 = 三种关系（人 / AI / 万物） */
+.sw-modal__panel::before {
+  content: "";
+  position: absolute; top: 0; left: 22px; right: 22px; height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--sw-cyan), var(--sw-violet) 52%, var(--sw-gold));
+  opacity: .9;
+}
+
+.sw-modal__close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  color: rgba(234, 246, 255, .55);
+  background: transparent;
+  border: 1px solid rgba(234, 246, 255, .12);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.sw-modal__close:hover {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--sw-accent) 55%, transparent);
+  background: rgba(255, 255, 255, .05);
+}
+
+.sw-modal__status {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--sw-cyan) 88%, #fff);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--sw-cyan) 34%, transparent);
+  background: color-mix(in srgb, var(--sw-cyan) 9%, transparent);
+}
+.sw-modal__status i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--sw-cyan);
+  box-shadow: 0 0 10px var(--sw-cyan);
+  animation: sw-pulse 2.2s ease-in-out infinite;
+}
+
+.sw-modal__title {
+  margin: 20px 0 0;
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3.2vw, 1.85rem);
+  line-height: 1.25;
+  letter-spacing: -.01em;
+  color: var(--sw-ink);
+}
+
+.sw-modal__body {
+  margin: 14px 0 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgba(234, 246, 255, .68);
+}
+
+.sw-modal__ok {
+  margin-top: 26px;
+  font: inherit; font-weight: 600; font-size: .95rem;
+  color: #04070e;
+  background: linear-gradient(120deg, var(--sw-cyan), var(--sw-violet));
+  border: 0; border-radius: 999px;
+  padding: 13px 30px;
+  cursor: pointer;
+  box-shadow: 0 12px 36px rgba(77, 227, 255, .22);
+  transition: transform .2s, box-shadow .2s, filter .2s;
+}
+.sw-modal__ok:hover { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 16px 44px rgba(77, 227, 255, .3); }
+
+.sw-modal__hint {
+  margin: 16px 0 0;
+  font-size: .74rem; line-height: 1.6;
+  color: rgba(143, 166, 196, .55);
+}
+
+@media (max-width: 560px) {
+  .sw-modal { padding: 16px; }
+  .sw-modal__panel { padding: 32px 22px 24px; border-radius: 18px; }
+  .sw-modal__panel::before { left: 16px; right: 16px; }
+}
+
 /* ------------------------------------------------------ 移动端适配 */
 @media (max-width: 860px) {
   .sw-stage { opacity: 0.42; }

@@ -15,8 +15,19 @@ ROOT = sys.argv[2] if len(sys.argv) > 2 else "site"
 
 
 class Handler(SimpleHTTPRequestHandler):
+    # HTTP/1.1 + keep-alive：浏览器会复用连接，少一次握手一次重置，
+    # 行为也更接近真实服务器（默认 HTTP/1.0 是"一个请求一条连接"）
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, fmt, *args):  # 静音访问日志
         pass
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except (ConnectionResetError, BrokenPipeError):
+            # 客户端在下载中途断开（刷新/切页），不是服务器错误
+            self.close_connection = True
 
 
 if __name__ == "__main__":

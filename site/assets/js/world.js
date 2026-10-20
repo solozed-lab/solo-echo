@@ -48,7 +48,7 @@
         { label: 'AI 与 AI', eyebrow: '二 · AI 与 AI', title: '当智能体开始彼此对话', body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。', tags: ['智能体互调', '协作', '接力'] },
         { label: '人与人', eyebrow: '三 · 人与人', title: '人与人之间，重新回归连接', body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。', tags: ['社群', '信任', '真实关系'] },
         { label: '万物', eyebrow: '三生万物', title: '犹如三生万物', body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。', tags: ['自生长', '涌现', '开放'] },
-        { label: '加入', eyebrow: '加入我们', title: '让你的回声，被更多节点听见', body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。', tags: [], cta: { primary: '加入', secondary: '回到顶部' } }
+        { label: '加入', eyebrow: '加入我们', title: '让你的回声，被更多节点听见', body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。', tags: [], cta: { primary: { label: '加入', href: '#join' }, secondary: { label: '回到顶部', href: '#top' } } }
       ],
       hud: {
         toggle: '交互面板', density: '粒子密度', camera: '摄像头', gyro: '陀螺仪', shake: '摇一摇',
@@ -65,6 +65,11 @@
         fail: '该能力启动失败，已保持关闭',
         camDenied: '摄像头权限被拒绝', camNone: '没有找到摄像头设备',
         camErr: '摄像头启动失败', camFrame: '摄像头帧读取失败'
+      },
+      modal: {
+        status: '即将开放', title: '连接正在生长',
+        body: 'SOLO & ECHO 还在准备中。开放那天，你的第一个节点就会接进来——和 AI，和人。',
+        close: '知道了', hint: '先四处看看：把鼠标移到画面上，网络会回应你。'
       }
     },
 
@@ -80,7 +85,7 @@
         { label: 'AI & AI', eyebrow: 'II · AI & AI', title: 'When agents start\ntalking to each other', body: 'One model calls another to collaborate, to challenge, to hand off. Capability no longer belongs to one model — it belongs to the connection that just happened between two nodes.', tags: ['Agent mesh', 'Collaboration', 'Handoff'] },
         { label: 'Human & Human', eyebrow: 'III · Human & Human', title: 'Between people,\nconnection returns', body: 'In an age where everyone is already online, what was scarce was never the channel — it is the connection itself. We build for people meeting again, not for people meeting less.', tags: ['Community', 'Trust', 'Real ties'] },
         { label: 'All Things', eyebrow: 'From three, all things', title: 'From three,\nall things emerge', body: 'Human & AI, AI & AI, human & human — once all three hold at the same time, new things need no invention. They grow. Nothing here is manufactured; it is brought into being by the relationships themselves.', tags: ['Self-growing', 'Emergence', 'Open'] },
-        { label: 'Join', eyebrow: 'Join us', title: 'Let your echo be\nheard by more nodes', body: 'People building AI. Teams working alongside machines. Agents that already connect to one another on their own. Come in and plug your node into the graph.', tags: [], cta: { primary: 'Join', secondary: 'Back to top' } }
+        { label: 'Join', eyebrow: 'Join us', title: 'Let your echo be\nheard by more nodes', body: 'People building AI. Teams working alongside machines. Agents that already connect to one another on their own. Come in and plug your node into the graph.', tags: [], cta: { primary: { label: 'Join', href: '#join' }, secondary: { label: 'Back to top', href: '#top' } } }
       ],
       hud: {
         toggle: 'Controls', density: 'Density', camera: 'Camera', gyro: 'Gyroscope', shake: 'Shake',
@@ -97,6 +102,11 @@
         fail: 'Could not start — left switched off',
         camDenied: 'Camera permission denied', camNone: 'No camera device found',
         camErr: 'Could not start the camera', camFrame: 'Could not read camera frames'
+      },
+      modal: {
+        status: 'Opening soon', title: 'The connection is still growing',
+        body: 'SOLO & ECHO is still being prepared. When it opens, your first node joins in — with AI, and with people.',
+        close: 'Got it', hint: 'Look around meanwhile: move your mouse and the network answers.'
       }
     }
   };
@@ -232,7 +242,7 @@
   window.addEventListener('pointermove', onPointer, { passive: true });
   window.addEventListener('pointerleave', () => field.setPointer(-9999, -9999, 0, 0, false));
   window.addEventListener('pointerdown', (e) => {
-    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang')) return;
+    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang, .sw-topcta, .sw-modal')) return;
     field.setPointer(e.clientX, e.clientY, 0, 0, true);
     field.addShock(e.clientX, e.clientY, 1);
   }, { passive: true });
@@ -389,6 +399,73 @@
   requestAnimationFrame(statsLoop);
 
   /* ==========================================================
+     「加入」弹框：社区还没开放，优雅地告诉用户
+     —— 不做假表单（没有后端的邮箱输入框是骗人的），
+        只给状态 + 说明 + 一个体面的关闭动作。
+     ========================================================== */
+  const modal = document.createElement('div');
+  modal.className = 'sw-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'sw-modal-title');
+  modal.innerHTML = `
+    <div class="sw-modal__backdrop" data-close></div>
+    <div class="sw-modal__panel">
+      <button class="sw-modal__close" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="sw-modal__status"><i></i><span data-modal-i18n="status"></span></div>
+      <h3 class="sw-modal__title" id="sw-modal-title" data-modal-i18n="title"></h3>
+      <p class="sw-modal__body" data-modal-i18n="body"></p>
+      <button class="sw-modal__ok" type="button" data-close data-modal-i18n="close"></button>
+      <p class="sw-modal__hint" data-modal-i18n="hint"></p>
+    </div>`;
+  document.body.appendChild(modal);
+
+  let lastFocus = null;
+
+  function openModal() {
+    if (modal.classList.contains('is-open')) return;
+    lastFocus = document.activeElement;
+    modal.classList.add('is-open');
+    const ok = modal.querySelector('.sw-modal__ok');
+    if (ok) ok.focus({ preventScroll: true });
+  }
+
+  function closeModal() {
+    if (!modal.classList.contains('is-open')) return;
+    modal.classList.remove('is-open');
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  modal.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]')) closeModal();
+  });
+
+  // 弹框打开时不让背景滚动（不锁 body overflow —— 引擎靠 window.scrollY 定位章节，
+  // 锁了会把滚动位置清零，章节状态就错了）
+  ['wheel', 'touchmove'].forEach(ev => {
+    modal.addEventListener(ev, (e) => {
+      if (modal.classList.contains('is-open')) e.preventDefault();
+    }, { passive: false });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // 所有主 CTA（顶栏 + 终屏主按钮）都改为打开弹框
+  // 按语义匹配而不是 href —— href 会随语言/引擎默认值变化，语义不会
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('.sw-topcta, .sw-copy__cta .sw-btn--primary');
+    if (!a) return;
+    e.preventDefault();
+    openModal();
+  });
+
+  /* ==========================================================
      语言切换：原地改写 DOM（不重挂载、不丢滚动位置）
      ========================================================== */
   const topbar = world.querySelector('.sw-topbar');
@@ -449,8 +526,14 @@
       tags.forEach((li, k) => { if (s.tags[k] != null) li.textContent = s.tags[k]; });
       const btns = c.querySelectorAll('.sw-copy__cta .sw-btn');
       if (s.cta && btns.length) {
-        if (btns[0]) btns[0].textContent = s.cta.primary;
-        if (btns[1]) btns[1].textContent = s.cta.secondary;
+        if (btns[0]) {
+          btns[0].textContent = s.cta.primary.label;
+          btns[0].setAttribute('href', s.cta.primary.href);
+        }
+        if (btns[1]) {
+          btns[1].textContent = s.cta.secondary.label;
+          btns[1].setAttribute('href', s.cta.secondary.href);
+        }
       }
     });
 
@@ -458,6 +541,12 @@
     hud.querySelectorAll('[data-i18n]').forEach(el => {
       const k = el.dataset.i18n;
       if (C.hud[k] != null) el.textContent = C.hud[k];
+    });
+
+    // 弹框文案
+    modal.querySelectorAll('[data-modal-i18n]').forEach(el => {
+      const k = el.dataset.modalI18n;
+      if (C.modal[k] != null) el.textContent = C.modal[k];
     });
 
     // 按钮状态
