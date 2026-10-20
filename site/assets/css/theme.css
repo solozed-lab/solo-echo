@@ -1,0 +1,298 @@
+/* ============================================================================
+   theme.css — 深空主题 + HUD 交互面板
+   覆盖插件注入的浅色默认 token（插件用 @layer 包裹，本文件在更外层，优先级更高）
+   ========================================================================== */
+
+:root, .sw-root {
+  --sw-bg: #05070f;
+  --sw-bg-deep: #02040a;
+  --sw-ink: #eaf6ff;
+  --sw-ink-soft: #8fa6c4;
+  --sw-accent: #4de3ff;
+  --sw-cyan: #4de3ff;
+  --sw-violet: #a06bff;
+  --sw-gold: #ffb765;
+  --sw-font-display: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC",
+                     -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --sw-font-body: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC",
+                  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+html, body {
+  background: var(--sw-bg-deep);
+  color: var(--sw-ink);
+  font-family: var(--sw-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body { overflow-x: hidden; }
+
+/* 引擎的正文色块是"浅色主题"假设，改成深色玻璃面板。
+   注意：桌面是左侧横向遮罩，移动端是底部纵向遮罩，
+   两者几何完全不同，必须分别覆盖，否则会在遮罩盒边缘出现硬边。 */
+@media (min-width: 861px) {
+  .sw-copylayer::before {
+    background: linear-gradient(90deg,
+      rgba(5, 7, 15, 0.94) 0%,
+      rgba(5, 7, 15, 0.82) 30%,
+      rgba(5, 7, 15, 0.42) 60%,
+      transparent 100%);
+  }
+}
+
+.sw-copy__title {
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.85), 0 0 60px color-mix(in srgb, var(--sw-accent) 22%, transparent);
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+}
+
+/* 引擎用 transform 做视差，会盖掉 CSS 的垂直居中 —— 这里手动上移，
+   保证 720p 高度下文案块不越过视口底边 */
+.sw-copy { top: 43%; }
+
+.sw-copy__body {
+  color: rgba(234, 246, 255, 0.72);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.9);
+}
+
+.sw-copy__num { color: rgba(143, 166, 196, 0.7); }
+
+.sw-copy__tags li {
+  color: color-mix(in srgb, var(--sw-accent) 80%, #fff);
+  background: color-mix(in srgb, var(--sw-accent) 12%, rgba(255, 255, 255, 0.04));
+  border-color: color-mix(in srgb, var(--sw-accent) 34%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.sw-btn--primary {
+  color: #04070e !important;
+  background: linear-gradient(120deg, var(--sw-accent), color-mix(in srgb, var(--sw-accent) 55%, #fff)) !important;
+  box-shadow: 0 10px 34px color-mix(in srgb, var(--sw-accent) 32%, transparent);
+}
+
+.sw-btn--ghost {
+  color: var(--sw-ink) !important;
+  border-color: rgba(234, 246, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(6px);
+}
+
+.sw-topbar { background: linear-gradient(180deg, rgba(3, 5, 12, 0.75), transparent); }
+
+.sw-brand { color: var(--sw-ink) !important; }
+.sw-brand__name { letter-spacing: 0.06em; }
+
+.sw-nav {
+  background: rgba(10, 16, 30, 0.55) !important;
+  border-color: rgba(234, 246, 255, 0.12) !important;
+  backdrop-filter: blur(14px);
+}
+.sw-nav__item { color: var(--sw-ink-soft) !important; }
+.sw-nav__item:hover { color: var(--sw-ink) !important; }
+.sw-nav__item.is-active { color: #04070e !important; }
+
+.sw-topcta {
+  color: #04070e !important;
+  background: linear-gradient(120deg, var(--sw-cyan), var(--sw-violet)) !important;
+}
+
+.sw-route__label {
+  color: var(--sw-ink) !important;
+  background: rgba(10, 16, 30, 0.88) !important;
+  border-color: rgba(234, 246, 255, 0.14) !important;
+}
+
+.sw-hint { color: rgba(143, 166, 196, 0.75); }
+
+/* 视频层压暗，让实时粒子成为主角 */
+.sw-stage { opacity: 0.5; }
+/* HUD 里可手动关掉视频层（省电/性能，或只看粒子） */
+.sw-novideo .sw-stage { opacity: 0 !important; }
+.sw-sky__grad {
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--sw-accent) 9%, transparent), transparent 60%),
+    linear-gradient(180deg, #070b16 0%, #05070f 55%, #03050b 100%);
+}
+.sw-sky__glow {
+  background:
+    radial-gradient(58% 42% at 72% 14%, color-mix(in srgb, var(--sw-accent) 20%, transparent), transparent 72%),
+    radial-gradient(44% 34% at 22% 78%, color-mix(in srgb, var(--sw-violet) 14%, transparent), transparent 74%);
+}
+
+/* ---------------------------------------------------------- 粒子画布 */
+.sw-field {
+  position: fixed;
+  inset: 0;
+  z-index: 15;                /* 在视频层之上、文字层之下 */
+  pointer-events: none;
+  display: block;
+  mix-blend-mode: screen;
+}
+
+/* ------------------------------------------------------------- HUD */
+.sw-hud {
+  position: fixed;
+  right: clamp(14px, 2.4vw, 30px);
+  bottom: clamp(14px, 2.4vw, 30px);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  font-family: var(--sw-font-body);
+}
+
+.sw-hud__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: inherit;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: rgba(234, 246, 255, 0.82);
+  background: rgba(8, 13, 24, 0.72);
+  border: 1px solid rgba(234, 246, 255, 0.14);
+  border-radius: 999px;
+  padding: 9px 16px;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: border-color .25s, color .25s, background .25s;
+}
+.sw-hud__toggle:hover { border-color: color-mix(in srgb, var(--sw-accent) 55%, transparent); color: #fff; }
+
+.sw-hud__dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--sw-accent);
+  box-shadow: 0 0 10px var(--sw-accent);
+  animation: sw-pulse 2.4s ease-in-out infinite;
+}
+@keyframes sw-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.72); } }
+
+.sw-hud__panel {
+  width: min(310px, 74vw);
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  background: rgba(7, 11, 21, 0.82);
+  border: 1px solid rgba(234, 246, 255, 0.12);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.sw-hud__row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sw-hud__row label { font-size: 0.76rem; color: var(--sw-ink-soft); white-space: nowrap; }
+.sw-hud__row output { font-size: 0.72rem; color: var(--sw-ink-soft); font-variant-numeric: tabular-nums; min-width: 24px; text-align: right; }
+
+.sw-hud input[type=range] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 3px; border-radius: 3px; background: rgba(234, 246, 255, 0.18);
+  outline: none; cursor: pointer;
+}
+.sw-hud input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--sw-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sw-accent) 70%, transparent);
+  cursor: pointer;
+}
+
+.sw-hud__row--btns { flex-wrap: wrap; gap: 7px; }
+.sw-hud__row--btns button {
+  font: inherit; font-size: 0.74rem;
+  color: rgba(234, 246, 255, 0.78);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(234, 246, 255, 0.12);
+  border-radius: 999px;
+  padding: 7px 13px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.sw-hud__row--btns button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--sw-accent) 60%, transparent); color: #fff; }
+.sw-hud__row--btns button.is-on {
+  color: #04070e;
+  background: var(--sw-accent);
+  border-color: transparent;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--sw-accent) 40%, transparent);
+}
+.sw-hud__row--btns button:disabled { opacity: .32; cursor: not-allowed; }
+.sw-hud__row--btns button.is-loading { opacity: .55; }
+
+.sw-hud__stat {
+  font-size: 0.71rem;
+  color: rgba(143, 166, 196, 0.9);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  padding-top: 10px;
+  border-top: 1px solid rgba(234, 246, 255, 0.09);
+}
+.sw-hud__note { margin: 8px 0 0; font-size: 0.68rem; line-height: 1.5; color: rgba(143, 166, 196, 0.62); }
+.sw-hud__msg { margin: 6px 0 0; font-size: 0.7rem; color: rgba(255, 183, 101, 0.9); min-height: 1em; }
+.sw-hud__msg[data-tone=ok] { color: rgba(77, 227, 255, 0.9); }
+
+/* ------------------------------------------------------- 扩散脉冲提示 */
+.sw-flash {
+  position: fixed;
+  left: 50%; top: 46%;
+  transform: translate(-50%, -50%) scale(.9);
+  z-index: 48;
+  pointer-events: none;
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+  letter-spacing: 0.3em;
+  color: #fff;
+  text-shadow: 0 0 28px var(--sw-cyan);
+  opacity: 0;
+}
+.sw-flash.is-on { animation: sw-flash 1.5s cubic-bezier(.2,.7,.2,1); }
+@keyframes sw-flash {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.86); letter-spacing: .1em; }
+  22% { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .34em; }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.08); letter-spacing: .5em; }
+}
+
+/* ------------------------------------------------------ 移动端适配 */
+@media (max-width: 860px) {
+  .sw-stage { opacity: 0.42; }
+  /* 移动端由插件改成底部定位，这里必须把桌面端的 top 复位
+     （未分层样式优先级高于插件的 @layer sw） */
+  .sw-copy { top: auto; }
+  /* 移动端遮罩是底部纵向渐变，必须平滑收到 0，否则遮罩盒顶部会出现硬边 */
+  .sw-copylayer::before {
+    height: 74%;
+    background: linear-gradient(0deg,
+      rgba(5, 7, 15, 0.97) 0%,
+      rgba(5, 7, 15, 0.93) 32%,
+      rgba(5, 7, 15, 0.78) 52%,
+      rgba(5, 7, 15, 0.52) 70%,
+      rgba(5, 7, 15, 0.26) 85%,
+      rgba(5, 7, 15, 0.08) 94%,
+      rgba(5, 7, 15, 0) 100%);
+  }
+  .sw-hud { bottom: calc(14px + env(safe-area-inset-bottom)); right: 12px; left: auto; align-items: flex-end; }
+  /* 移动端文案是底部锚定的，面板改到顶部展开，避免压住正文 */
+  .sw-hud__panel {
+    position: fixed;
+    top: calc(62px + env(safe-area-inset-top));
+    right: 12px;
+    bottom: auto;
+    width: min(280px, calc(100vw - 24px));
+  }
+  .sw-hint { bottom: calc(74px + env(safe-area-inset-bottom)); }
+}
+
+/* --------------------------------------------- 降低动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .sw-field { display: none; }
+  .sw-hud__dot { animation: none; }
+  .sw-hint i::after { animation: none; }
+  .sw-sky__grad { background: linear-gradient(180deg, #0a1224 0%, #05070f 100%); }
+}
+
+/* 键盘可达性 */
+.sw-hud button:focus-visible,
+.sw-nav__item:focus-visible,
+.sw-route__dot:focus-visible,
+.sw-btn:focus-visible {
+  outline: 2px solid var(--sw-accent);
+  outline-offset: 3px;
+}

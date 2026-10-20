@@ -1,0 +1,47 @@
+{
+  "origin": {
+    "kind": "dive",
+    "task_id": "454353428926730",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "ai": {
+    "kind": "dive",
+    "task_id": "454352997749047",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "human": {
+    "kind": "dive",
+    "task_id": "454353334325528",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "mesh": {
+    "kind": "dive",
+    "task_id": "454352968220979",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "join": {
+    "kind": "dive",
+    "task_id": "454353673396481",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "conn0": {
+    "kind": "conn",
+    "task_id": "454353633366277",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "conn1": {
+    "kind": "conn",
+    "task_id": "454353175712035",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "conn2": {
+    "kind": "conn",
+    "task_id": "454353673396482",
+    "model": "MiniMax-Hailuo-2.3"
+  },
+  "conn3": {
+    "kind": "conn",
+    "task_id": "454353429426454",
+    "model": "MiniMax-Hailuo-2.3"
+  }
+}

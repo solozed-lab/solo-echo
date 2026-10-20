@@ -1,0 +1,34 @@
+{
+  "requests": [
+    {
+      "prompt": "Cinematic wide shot of an immense field of tiny glowing cyan particles suspended in a deep blue-black void, igniting like a constellation network spreading outward from the center, thin luminous connection lines forming between nodes, volumetric haze, cold rim light from upper center, sense of vast scale and awakening, ultra detailed, 8k render. STYLE: deep space blue-black background #05070f, teal-cyan #4de3ff and violet #a06bff accents, volumetric light, high contrast, subtle film grain, absolutely no text, no watermark, no human faces, no logos",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_file": "key_origin.jpg"
+    },
+    {
+      "prompt": "Two distinct streams of glowing particles converging through darkness: one stream cool cyan and geometric like machine logic, the other warm violet and organic, meeting in the middle where a bright nexus of light forms with thin connecting filaments, cinematic side view, depth of field, ethereal, 8k render. STYLE: deep space blue-black background #05070f, teal-cyan #4de3ff and violet #a06bff, volumetric light, high contrast, subtle film grain, absolutely no text, no watermark, no human faces, no logos",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_file": "key_ai.jpg"
+    },
+    {
+      "prompt": "A warm golden cluster of glowing particles forming a luminous social constellation, many small nodes linked by delicate light threads in a dense organic swarm, soft amber bloom spreading outward, cinematic close orbit view, cozy yet futuristic, 8k render. STYLE: deep space blue-black background #05070f, warm gold #ffb765 accents with faint cyan rim light, volumetric light, high contrast, subtle film grain, absolutely no text, no watermark, no human faces, no logos",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_file": "key_human.jpg"
+    },
+    {
+      "prompt": "A colossal spherical network shell made of thousands of glowing nodes and light filaments suspended in a dark void, the mesh curving away into deep perspective like a planet made of pure connection, wide cinematic view, awe-inspiring scale, 8k render. STYLE: deep space blue-black background #05070f, teal-cyan #4de3ff with violet #a06bff and sparse warm gold nodes, volumetric light, high contrast, subtle film grain, absolutely no text, no watermark, no human faces, no logos",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_file": "key_mesh.jpg"
+    },
+    {
+      "prompt": "Glowing particles converging and organizing into a luminous archway gateway of light in a dark void, threads of energy flowing into the opening, calm and inviting, cinematic centered composition, soft bloom, 8k render. STYLE: deep space blue-black background #05070f, teal-cyan #4de3ff with warm gold #ffb765 accents, volumetric light, high contrast, subtle film grain, absolutely no text, no watermark, no human faces, no logos",
+      "aspect_ratio": "16:9",
+      "resolution": "1K",
+      "output_file": "key_join.jpg"
+    }
+  ]
+}
