@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[
+  {"id":"brand","type":"string","label":"品牌","default":"SOLO & ECHO","group":"品牌"},
+  {"id":"url","type":"string","label":"域名","default":"solozed.com","group":"品牌"},
+  {"id":"cta","type":"string","label":"CTA","default":"加入","group":"品牌"},
+  {"id":"thesis","type":"string","label":"主张","default":"人与 AI、AI 与 AI、人与人","group":"文案"},
+  {"id":"kOne","type":"string","label":"一 · 眉题","default":"一 · 人与 AI","group":"文案"},
+  {"id":"kTwo","type":"string","label":"二 · 眉题","default":"二 · AI 与 AI","group":"文案"},
+  {"id":"kThree","type":"string","label":"三 · 眉题","default":"三 · 人与人","group":"文案"},
+  {"id":"kAll","type":"string","label":"万物 · 眉题","default":"万物","group":"文案"},
+  {"id":"hOne","type":"string","label":"一 · 标题","default":"AI 不是工具，而是另一个数字的伙伴","group":"文案"},
+  {"id":"hTwo","type":"string","label":"二 · 标题","default":"当智能体开始彼此对话","group":"文案"},
+  {"id":"hThree","type":"string","label":"三 · 标题","default":"人与人之间，重新回归连接","group":"文案"},
+  {"id":"hAll","type":"string","label":"万物 · 标题","default":"犹如三生万物","group":"文案"},
+  {"id":"hJoin","type":"string","label":"加入 · 标题","default":"让你的回声，被更多节点听见","group":"文案"},
+  {"id":"cHuman","type":"color","label":"人 · 青","default":"#4de3ff","group":"颜色"},
+  {"id":"cAI","type":"color","label":"AI · 紫","default":"#a06bff","group":"颜色"},
+  {"id":"cAI2","type":"color","label":"AI · 品红","default":"#ff7bd5","group":"颜色"},
+  {"id":"cWarm","type":"color","label":"人与人 · 金","default":"#ffb765","group":"颜色"},
+  {"id":"endHold","type":"number","label":"结尾停留（秒）","default":1.0,"min":0,"max":6,"step":0.1,"group":"节奏"}
+]'>
+<head>
+<meta charset="utf-8">
+<title>Solo &amp; Echo · 犹如三生万物</title>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/om.js"></script>
+<style id="om-fonts">
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-500.woff") format("woff"); font-weight: 500; font-style: normal; }
+@font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/NotoSansSC-900.woff") format("woff"); font-weight: 900; font-style: normal; }
+@font-face { font-family: "Inter"; src: url("assets/fonts/Inter-var.woff") format("woff"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: "Roboto Condensed"; src: url("assets/fonts/RobotoCondensed-var.woff") format("woff"); font-weight: 100 900; font-style: normal; }
+</style>
+<style>
+  :root{
+    --c-human:#4de3ff; --c-ai:#a06bff; --c-ai2:#ff7bd5; --c-warm:#ffb765;
+    --ink:#eaf6ff; --void:#03050c;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--void); }
+  #film {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 45%, #0a1226 0%, #05070f 52%, #02030a 100%);
+    color: var(--ink);
+    font-family: "Noto Sans SC", "Inter", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  #field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* 颗粒噪点：在内容之下 */
+  .grain { position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: overlay;
+    background-image: radial-gradient(rgba(255,255,255,.10) .5px, transparent .5px);
+    background-size: 3px 3px; }
+
+  /* HUD 机箱 */
+  .hud { position: absolute; inset: 0; pointer-events: none;
+         font-family: "Roboto Condensed", "Inter", monospace; }
+  .hud__tl { position: absolute; left: 56px; top: 44px; font-size: 20px; letter-spacing: .42em;
+             color: #a9bed8; font-weight: 500; }
+  .hud__tr { position: absolute; right: 56px; top: 44px; font-size: 18px; letter-spacing: .26em;
+             color: #7e95b6; }
+  .hud__bl { position: absolute; left: 56px; bottom: 40px; font-size: 19px; letter-spacing: .24em;
+             color: #9db3cd; }
+  .hud__ch { position: absolute; left: 56px; bottom: 40px; font-size: 19px; letter-spacing: .24em;
+             opacity: 0; }
+  .hud__ch b { color: var(--c-human); font-weight: 700; }
+  .hud__dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+              background: var(--c-human); box-shadow: 0 0 12px var(--c-human); margin-right: 12px; }
+
+  /* 章节文字块（左） */
+  .ch-anchor { position: absolute; left: 96px; top: 0; bottom: 0; width: 860px;
+               display: flex; align-items: center; pointer-events: none; }
+  .ch-anchor > .ch { width: 100%; opacity: 0; }
+  .ch__kick { display: flex; align-items: center; gap: 14px; font-size: 24px; letter-spacing: .22em;
+              font-weight: 500; color: var(--c-human); margin-bottom: 26px; }
+  .ch__head { margin: 0; font-size: 84px; line-height: 1.16; font-weight: 900; letter-spacing: -.01em; }
+  .ch__head .mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .18em; }
+  .ch__head .ch { display: inline-block; }
+  .ch__chips { display: flex; gap: 14px; margin-top: 34px; }
+  .ch__chips span { font-size: 22px; letter-spacing: .06em; padding: 9px 18px; border-radius: 999px;
+                    border: 1px solid currentColor; font-weight: 500; }
+  .ch__chips .r1 { color: var(--c-human); }
+  .ch__chips .r2 { color: var(--c-ai2); }
+  .ch__chips .r3 { color: var(--c-warm); }
+  .ch__note { margin-top: 28px; font-size: 27px; color: #9db3cd; line-height: 1.5; }
+
+  /* 尾卡 */
+  .endcard { position: absolute; inset: 0; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; opacity: 0; }
+  .endcard__brand { font-family: "Inter", sans-serif; font-weight: 800; font-size: 132px;
+                    letter-spacing: .06em; line-height: 1; }
+  .endcard__thesis { margin-top: 26px; font-size: 30px; letter-spacing: .2em; color: #a9bed8; }
+  .endcard__row { display: flex; align-items: center; gap: 26px; margin-top: 52px; }
+  .endcard__cta { font-size: 34px; font-weight: 500; color: #04070e; padding: 16px 46px; border-radius: 999px;
+                  background: linear-gradient(120deg, var(--c-human), var(--c-ai)); }
+  .endcard__url { font-family: "Roboto Condensed", sans-serif; font-size: 32px; letter-spacing: .2em;
+                  color: #b3c6dd; }
+  .endcard__mark { width: 74px; height: 74px; border-radius: 20px; margin-bottom: 34px;
+                   background: linear-gradient(150deg, var(--c-human), var(--c-ai) 55%, var(--c-warm));
+                   box-shadow: 0 0 60px rgba(77,227,255,.4); }
+</style>
+</head>
+<body>
+<div id="film" data-composition-id="film" data-width="1920" data-height="1080">
+  <audio id="om-sound" src="assets/sound.wav" data-start="0" data-duration="24" data-track-index="8" data-volume="1"></audio>
+  <canvas id="field" width="1920" height="1080"></canvas>
+  <div class="grain"></div>
+
+  <div class="hud" aria-hidden="true">
+    <div class="hud__tl" data-om-id="hudBrand" data-var-text="brand">SOLO &amp; ECHO</div>
+    <div class="hud__tr">SCROLL / DRAG / CONNECT</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="0"><span class="hud__dot"></span><b>01</b> / 06 &nbsp;万物 · 起点</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="1"><span class="hud__dot"></span><b>02</b> / 06 &nbsp;一 · 人与 AI</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="2"><span class="hud__dot"></span><b>03</b> / 06 &nbsp;二 · AI 与 AI</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="3"><span class="hud__dot"></span><b>04</b> / 06 &nbsp;三 · 人与人</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="4"><span class="hud__dot"></span><b>05</b> / 06 &nbsp;万物</div>
+    <div class="hud__ch" data-layout-allow-occlusion data-ch="5"><span class="hud__dot"></span><b>06</b> / 06 &nbsp;加入</div>
+  </div>
+
+  <div class="ch-anchor" data-layout-allow-occlusion><section class="ch" id="ch-one" data-om-id="chOne">
+    <div class="ch__kick"><span data-om-var="kOne">一 · 人与 AI</span></div>
+    <h2 class="ch__head" data-om-var="hOne"></h2>
+  </section></div>
+
+  <div class="ch-anchor" data-layout-allow-occlusion><section class="ch" id="ch-two" data-om-id="chTwo">
+    <div class="ch__kick"><span data-om-var="kTwo">二 · AI 与 AI</span></div>
+    <h2 class="ch__head" data-om-var="hTwo"></h2>
+  </section></div>
+
+  <div class="ch-anchor" data-layout-allow-occlusion><section class="ch" id="ch-three" data-om-id="chThree">
+    <div class="ch__kick"><span data-om-var="kThree">三 · 人与人</span></div>
+    <h2 class="ch__head" data-om-var="hThree"></h2>
+  </section></div>
+
+  <div class="ch-anchor" data-layout-allow-occlusion><section class="ch" id="ch-all" data-om-id="chAll">
+    <div class="ch__kick"><span data-om-var="kAll">万物</span></div>
+    <h2 class="ch__head" data-om-var="hAll"></h2>
+    <div class="ch__chips">
+      <span class="r1">人与 AI</span><span class="r2">AI 与 AI</span><span class="r3">人与人</span>
+    </div>
+  </section></div>
+
+  <section class="endcard" id="ch-join" data-om-id="chJoin">
+    <div class="endcard__mark"></div>
+    <div class="endcard__brand" data-om-var="brand" data-om-id="endBrand">SOLO &amp; ECHO</div>
+    <div class="endcard__thesis" data-om-var="thesis" data-om-id="endThesis"></div>
+    <div class="endcard__row">
+      <div class="endcard__cta" data-om-var="cta" data-om-id="endCta"></div>
+      <div class="endcard__url" data-om-var="url" data-om-id="endUrl"></div>
+    </div>
+  </section>
+</div>
+
+<script type="text/vnd.abc" id="om-score">
+X:1
+T:Solo & Echo · 三生万物（动机 = 回声：E–B–e–B，回声上行一步到 G）
+M:4/4
+L:1/8
+Q:1/4=120
+K:Em
+V:PLK inst=synpluck gain=0.55
+!mark:hook! !pp! E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | 
+!mark:one! !mp! C/G/e/G/ E/G/e/G/ | C/G/e/G/ E/G/e/G/ | C/G/e/G/ E/G/e/G/ | C/G/e/G/ E/G/e/G/ | 
+!mark:two! !mp! E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ !ff! | D/G/d/G/ B,/G/d/G/ | D/G/d/G/ B,/G/d/G/ | 
+!mark:three! !mp! E/B/e/B/ E/B/e/B/ | E/B/e/B/ E/B/e/B/ | E/B/e/B/ E/B/e/B/ | E/B/e/B/ E/B/e/B/ | 
+!mark:all! !ff! !hit! E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | C/G/e/G/ E/G/e/G/ | 
+!mark:join! !ff! E,,2 E,,2 E,,2 E,,2 z2 z2 z2 z2 | 
+E2 B2 e2 B2 E2 B2 e2 B2 | 
+V:BAS inst=synbass gain=0.8
+!mf! E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | C,,C,,C,,C,, C,,C,,C,,C,, | C,,C,,C,,C,, C,,C,,C,,C,, | 
+!mf! E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | D,,D,,D,,D,, G,,G,,G,,G,, | D,,D,,D,,D,, G,,G,,G,,G,, | 
+!mf! E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | 
+!ff! E,,E,,E,,E,, E,,E,,E,,E,, | E,,E,,E,,E,, E,,E,,E,,E,, | C,,C,,C,,C,, E,,E,,E,,E,, | C,,C,,C,,C,, E,,E,,E,,E,, | 
+!ff! E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 | 
+!ff! E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 E,,2 | 
+V:DK inst=drums kit=808 gain=0.9
+!mf! C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | 
+!mf! C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | 
+!mf! C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | D,,2 z2 D,,2 z2 D,,2 z2 D,,2 | D,,2 z2 D,,2 z2 D,,2 z2 D,,2 | 
+!mf! C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | 
+!ff! C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | 
+!ff! C,,2 z2 z2 z2 z2 z2 z2 z2 | 
+!ff! C,,2 z2 z2 z2 z2 z2 z2 z2 | 
+V:DH inst=drums kit=pop gain=0.5
+!mf! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | 
+!mp! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | 
+!mp! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | 
+!mp! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | 
+!ff! ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | 
+!ff! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, z2 z2 z2 z2 z2 | 
+!ff! ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, z2 z2 z2 z2 z2 | 
+V:VLN inst=violins role=melody gain=0.7
+z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2 | 
+!mp! G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D,2 D,2 E2 E2 | E'2 E'2 D'2 D'2 | 
+!ff! E'2 E'2 G'2 G'2 | E'2 E'2 D'2 D'2 | C'2 C'2 E'2 E'2 | B'2 B'2 G'2 G'2 | 
+!ff! [E,G,B,]2 z2 z2 z2 z2 | 
+z2 z2 z2 z2 z2 z2 z2 z2 | 
+</script>
+<script>
+(() => {
+  const V = OM.vars();
+  const W = 1920, H = 1080, TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const clamp01 = v => clamp(v, 0, 1);
+  const smooth = x => { x = clamp01(x); return x * x * (3 - 2 * x); };
+  const mix = (a, b, t) => a + (b - a) * t;
+  const rnd = OM.random(20261020);
+
+  const hex = (h) => {
+    const s = h.replace('#', '');
+    return [parseInt(s.slice(0, 2), 16) / 255, parseInt(s.slice(2, 4), 16) / 255, parseInt(s.slice(4, 6), 16) / 255];
+  };
+  const css = (c, a) => `rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${a})`;
+
+  /* ============================================================ 粒子 */
+  const N = 1300;
+  const role = new Uint8Array(N);          // 0 通用 1 人 2 AI 3 AI2 4 人与人 5 核心
+  const pu = new Float32Array(N), pv = new Float32Array(N), pw = new Float32Array(N), pz = new Float32Array(N);
+  const psize = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    pu[i] = rnd(); pv[i] = rnd(); pw[i] = rnd(); pz[i] = rnd();
+    const r = rnd();
+    role[i] = r < 0.13 ? 1 : r < 0.27 ? 2 : r < 0.36 ? 3 : r < 0.47 ? 4 : r < 0.51 ? 5 : 0;
+    psize[i] = 1.1 + rnd() * 2.4 + (role[i] === 5 ? 2.6 : 0) + (role[i] === 0 ? 0.5 : 0);
+  }
+
+  const ROLE_COL = [null, hex(V.cHuman), hex(V.cAI), hex(V.cAI2), hex(V.cWarm), [1, 1, 1]];
+  // 通用节点跟随章节强调色
+  const ACCENT = [
+    hex(V.cHuman), hex(V.cAI), hex(V.cAI2), hex(V.cWarm), hex(V.cHuman), hex(V.cAI)
+  ];
+
+  /* 章节：t 起、时长、形状、强调色索引 */
+  const SEC = [
+    { t: 0,  dur: 4,  shape: 'ignite',  acc: 0 },
+    { t: 4,  dur: 4,  shape: 'bipolar', acc: 1 },
+    { t: 8,  dur: 4,  shape: 'lattice', acc: 2 },
+    { t: 12, dur: 4,  shape: 'cluster', acc: 3 },
+    { t: 16, dur: 4,  shape: 'sphere',  acc: 4 },
+    { t: 20, dur: 4,  shape: 'gate',    acc: 5 }
+  ];
+  const DUR = 24;
+
+  /* 形态：纯函数 f(seed, t) —— 预览与渲染逐帧一致 */
+  const drift = (i, t, amp, sp) => {
+    const a = pu[i] * TAU, b = pv[i] * TAU;
+    return [Math.cos(a + t * sp) * amp, Math.sin(b * 1.3 + t * sp * .82) * amp];
+  };
+
+  function shIgnite(i, t) {
+    if (t < 0.25) return [(pu[i] - .5) * 3, (pv[i] - .5) * 3];
+    if (t < 2.1) {
+      const k = (t - 0.25) / 1.85, ang = pu[i] * TAU, R = k * 620, th = (pv[i] - .5) * 46;
+      const d = drift(i, t, 3, .8);
+      return [Math.cos(ang) * (R + th) + d[0], Math.sin(ang) * (R + th) * .76 + d[1]];
+    }
+    const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z)), ang = pu[i] * TAU;
+    const R = (0.18 + 0.82 * pv[i]) * 470;
+    const d = drift(i, t, 26, .55);
+    return [Math.cos(ang) * rr * R * 1.3 + d[0], Math.sin(ang) * rr * R * .78 + d[1]];
+  }
+
+  function shBipolar(i, t) {
+    // 左：AI（紫 / 品红）　右：人（青）　中间：一部分节点连成桥
+    let side;
+    if (role[i] === 2 || role[i] === 3) side = -1;
+    else if (role[i] === 1) side = 1;
+    else side = pu[i] < .52 ? -1 : 1;
+    if (role[i] === 4) side = pu[i] < .5 ? -1 : 1;
+    const bridge = role[i] === 0 && pv[i] < .16;
+    if (bridge) {
+      const u = pw[i], y = (pv[i] - .5) * 150;
+      const d = drift(i, t, 14, .7);
+      return [mix(-320, 320, u) + d[0], y + d[1]];
+    }
+    const ang = pu[i] * TAU, R = (0.12 + 0.88 * pv[i]) * 158;
+    const d = drift(i, t, 22, .6);
+    return [side * 280 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
+  }
+
+  function shLattice(i, t) {
+    // 四个快切形态：格栅 → 交错 → 环 → 爆散 → 格栅
+    const idx = Math.min(3, Math.floor(t / 1.0));
+    const local = t - idx * 1.0;
+    const f = smooth(local / .28);              // 形态内混合
+    const nextIdx = Math.min(3, idx + 1);
+    const g = (nextIdx !== idx) ? smooth((local - .72) / .28) : 0;
+    const A = latShape(i, idx, t);
+    if (g <= 0) return A;
+    const B = latShape(i, nextIdx, t);
+    return [mix(A[0], B[0], g), mix(A[1], B[1], g)];
+  }
+  function latShape(i, idx, t) {
+    const d = drift(i, t, 10, .9);
+    if (idx === 0 || idx === 3) {
+      // 两个格栅（5 列 × 7 行）相对，中间一条信号流
+      const isAI = role[i] === 2 || role[i] === 3;
+      const side = isAI ? -1 : 1;
+      const bridge = role[i] === 0 && pv[i] < .2;
+      if (bridge) {
+        const u = pw[i];
+        return [mix(-330, 330, u) + d[0], (pv[i] - .5) * 90 + d[1]];
+      }
+      const col = Math.floor(pu[i] * 5), row = Math.floor(pw[i] * 7);
+      const gx = (col + .5) / 5 - .5, gy = (row + .5) / 7 - .5;
+      return [side * 235 + gx * 185 + d[0], gy * 300 + d[1]];
+    }
+    if (idx === 1) {
+      // 交错：格栅的左右互换，节点穿越中线
+      const isAI = role[i] === 2 || role[i] === 3;
+      const side = isAI ? 1 : -1;
+      const col = Math.floor(pu[i] * 5), row = Math.floor(pw[i] * 7);
+      const gx = (col + .5) / 5 - .5, gy = (row + .5) / 7 - .5;
+      const cross = (pv[i] - .5) * 120;
+      return [side * 235 + gx * 185 + cross + d[0], gy * 300 + d[1]];
+    }
+    // 环
+    const ang = pu[i] * TAU, R = 285 + (pv[i] - .5) * 50;
+    return [Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R * .8 + d[1]];
+  }
+
+  function shCluster(i, t) {
+    // 四个暖色星团，缓慢互绕
+    const c = Math.floor(pu[i] * 4), a = c / 4 * TAU + t * .16;
+    const cx = Math.cos(a) * 300, cy = Math.sin(a) * 185;
+    const ang = pv[i] * TAU, R = (0.1 + 0.9 * pw[i]) * 150;
+    const d = drift(i, t, 26, .8);
+    return [cx + Math.cos(ang) * R * 1.2 + d[0], cy + Math.sin(ang) * R + d[1]];
+  }
+
+  function shSphere(i, t) {
+    const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z));
+    const ang = pu[i] * TAU + t * .1;
+    const R = 430 + (pv[i] - .5) * 40;
+    const d = drift(i, t, 12, .5);
+    return [Math.cos(ang) * rr * R * 1.12 + d[0], Math.sin(ang) * rr * R + d[1]];
+  }
+
+  function shGate(i, t) {
+    // 拱门：半圆 + 两条腿 + 中间汇入的流
+    const leg = pv[i] < .30;
+    const d = drift(i, t, 14, .7);
+    if (leg) {
+      const side = pu[i] < .5 ? -1 : 1;
+      const h = (pv[i] / .30) * 330;
+      return [side * 330 + d[0], 330 - h + d[1]];
+    }
+    const u = pu[i] * 2 - 1;                     // -1..1
+    const ang = Math.acos(clamp(u, -1, 1));      // 0..π
+    const R = 330;
+    return [Math.cos(ang) * R * 1.1 + d[0], 330 - Math.sin(ang) * R + d[1]];
+  }
+
+  const SHAPES = { ignite: shIgnite, bipolar: shBipolar, lattice: shLattice, cluster: shCluster, sphere: shSphere, gate: shGate };
+
+  function posOf(i, t) {
+    let k = 0;
+    while (k < SEC.length - 1 && t >= SEC[k + 1].t) k++;
+    const cur = SEC[k], nxt = SEC[k + 1];
+    const local = t - cur.t;
+    const p = SHAPES[cur.shape](i, local);
+    if (nxt && local > cur.dur - .55) {
+      const b = smooth((local - (cur.dur - .55)) / .55);
+      const q = SHAPES[nxt.shape](i, local - cur.dur);
+      return [mix(p[0], q[0], b), mix(p[1], q[1], b)];
+    }
+    return p;
+  }
+
+  /* 相机：世界坐标 → 屏幕 */
+  const CAM = [
+    { t: 0,  zoom: 1.62, x: 0,    y: -20 },
+    { t: 1.1, zoom: 1.0, x: 0,    y: 0 },
+    { t: 4,  zoom: 1.02, x: -450, y: -16 },
+    { t: 6,  zoom: 1.14, x: -420, y: -34 },
+    { t: 8,  zoom: 1.0,  x: -450, y: -16 },
+    { t: 10, zoom: 1.12, x: -470, y: -6 },
+    { t: 12, zoom: 1.06, x: -450, y: -16 },
+    { t: 16, zoom: .86,  x: -390, y: 0 },
+    { t: 20, zoom: 1.0,  x: 0,    y: 0 },
+    { t: 24, zoom: 1.18, x: 0,    y: 0 }
+  ];
+  function camAt(t) {
+    let i = 0;
+    while (i < CAM.length - 1 && t >= CAM[i + 1].t) i++;
+    const a = CAM[i], b = CAM[Math.min(CAM.length - 1, i + 1)];
+    const f = b.t > a.t ? smooth((t - a.t) / (b.t - a.t)) : 0;
+    return [mix(a.zoom, b.zoom, f), mix(a.x, b.x, f), mix(a.y, b.y, f)];
+  }
+
+  function accAt(t) {
+    let k = 0;
+    while (k < SEC.length - 1 && t >= SEC[k + 1].t) k++;
+    const cur = SEC[k], nxt = SEC[k + 1];
+    const local = t - cur.t;
+    if (nxt && local > cur.dur - .55) {
+      const b = smooth((local - (cur.dur - .55)) / .55);
+      const ca = ACCENT[cur.acc], cb = ACCENT[nxt.acc];
+      return [mix(ca[0], cb[0], b), mix(ca[1], cb[1], b), mix(ca[2], cb[2], b)];
+    }
+    return ACCENT[cur.acc];
+  }
+
+  /* ============================================================ 渲染 */
+  const cvs = document.getElementById('field');
+  const ctx = cvs.getContext('2d', { alpha: true });
+  const xs = new Float32Array(N), ys = new Float32Array(N);
+  const alphas = new Float32Array(N);
+
+  // 光点精灵：每种角色一个
+  const spriteFor = (col) => {
+    const s = document.createElement('canvas'); s.width = s.height = 48;
+    const c = s.getContext('2d');
+    const g = c.createRadialGradient(24, 24, 0, 24, 24, 24);
+    g.addColorStop(0, css(col, 1)); g.addColorStop(.22, css(col, .55));
+    g.addColorStop(.55, css(col, .13)); g.addColorStop(1, css(col, 0));
+    c.fillStyle = g; c.fillRect(0, 0, 48, 48);
+    return s;
+  };
+  const SPRITES = ROLE_COL.map(c => spriteFor(c || [1, 1, 1]));
+  const SPRITE_ACC = spriteFor([1, 1, 1]);
+
+  // 连线：按角色分桶，一桶一条路径
+  const CELL = 118, COLS = Math.ceil(W / CELL) + 2, ROWS = Math.ceil(H / CELL) + 2;
+  const head = new Int32Array(COLS * ROWS), nxt = new Int32Array(N);
+  const BUCK = 6, MAXSEG = 2600;
+  const segs = Array.from({ length: BUCK }, () => new Float32Array(MAXSEG * 4));
+  const segN = new Int32Array(BUCK);
+  const linkDist = 132;
+
+  function draw(t) {
+    const [zoom, camX, camY] = camAt(t);
+    const acc = accAt(t);
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    // 位置
+    for (let i = 0; i < N; i++) {
+      const p = posOf(i, t);
+      xs[i] = (p[0] - camX) * zoom + W / 2;
+      ys[i] = (p[1] - camY) * zoom + H / 2;
+      const fade = (xs[i] < -80 || xs[i] > W + 80 || ys[i] < -80 || ys[i] > H + 80) ? 0 : 1;
+      alphas[i] = fade * (role[i] === 5 ? 1 : role[i] === 0 ? .55 : .78);
+    }
+
+    // 连线
+    head.fill(-1);
+    for (let i = 0; i < N; i++) {
+      const cx = clamp((xs[i] / CELL) | 0, 0, COLS - 1), cy = clamp((ys[i] / CELL) | 0, 0, ROWS - 1);
+      const k = cy * COLS + cx;
+      nxt[i] = head[k]; head[k] = i;
+    }
+    segN.fill(0);
+    const d2 = linkDist * linkDist;
+    for (let i = 0; i < N; i++) {
+      if (!alphas[i]) continue;
+      const cx = clamp((xs[i] / CELL) | 0, 0, COLS - 1), cy = clamp((ys[i] / CELL) | 0, 0, ROWS - 1);
+      for (let oy = 0; oy <= 1; oy++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          if (oy === 0 && ox < 0) continue;
+          if (oy === 1 && ox === 1) continue;
+          const nx = cx + ox, ny = cy + oy;
+          if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
+          let j = head[ny * COLS + nx];
+          while (j !== -1) {
+            if (j > i) {
+              const dx = xs[i] - xs[j], dy = ys[i] - ys[j];
+              if (dx * dx + dy * dy < d2) {
+                const b = role[i] === 0 && role[j] === 0 ? 0 : Math.min(role[i] === 0 ? 5 : role[i], role[j] === 0 ? 5 : role[j]);
+                const bIdx = b === 5 ? 5 : (b === 0 ? 0 : b - 1 + 1);
+                const arr = segs[Math.min(5, bIdx)];
+                const n = segN[Math.min(5, bIdx)];
+                if (n < MAXSEG) {
+                  const o = n * 4;
+                  arr[o] = xs[i]; arr[o + 1] = ys[i]; arr[o + 2] = xs[j]; arr[o + 3] = ys[j];
+                  segN[Math.min(5, bIdx)] = n + 1;
+                }
+              }
+            }
+            j = nxt[j];
+          }
+        }
+      }
+    }
+    for (let b = 0; b < BUCK; b++) {
+      const n = segN[b]; if (!n) continue;
+      const col = b === 0 ? acc : ROLE_COL[b];
+      ctx.strokeStyle = css(col, .30);
+      ctx.lineWidth = 1.15;
+      ctx.beginPath();
+      const arr = segs[b];
+      for (let s = 0; s < n; s++) { const o = s * 4; ctx.moveTo(arr[o], arr[o + 1]); ctx.lineTo(arr[o + 2], arr[o + 3]); }
+      ctx.stroke();
+    }
+
+    // 光点
+    for (let i = 0; i < N; i++) {
+      if (!alphas[i]) continue;
+      const col = role[i] === 0 ? acc : ROLE_COL[role[i]];
+      const sp = role[i] === 0 ? SPRITE_ACC : SPRITES[role[i]];
+      const r = psize[i] * (role[i] === 0 ? 1 : 1.15) * (zoom < 1 ? zoom : 1);
+      ctx.globalAlpha = alphas[i];
+      ctx.drawImage(sp, xs[i] - r * 1.6, ys[i] - r * 1.6, r * 3.2, r * 3.2);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ============================================================ 文字 */
+  const esc = (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c] || c;
+  const perChar = (el, text) => {
+    el.innerHTML = [...text].map(c => c === ' ' ? ' ' : `<span class="mask"><span class="ch">${esc(c)}</span></span>`).join('');
+  };
+  document.querySelector('#ch-one .ch__head').innerHTML = '';
+  const heads = {
+    one: document.querySelector('#ch-one .ch__head'),
+    two: document.querySelector('#ch-two .ch__head'),
+    three: document.querySelector('#ch-three .ch__head'),
+    all: document.querySelector('#ch-all .ch__head')
+  };
+  perChar(heads.one, V.hOne); perChar(heads.two, V.hTwo);
+  perChar(heads.three, V.hThree); perChar(heads.all, V.hAll);
+  document.querySelector('.endcard__thesis').textContent = V.thesis;
+  document.querySelector('.endcard__cta').textContent = V.cta;
+  document.querySelector('.endcard__url').textContent = V.url;
+  document.querySelector('.endcard__brand').textContent = V.brand;
+  document.querySelector('.hud__tl').textContent = V.brand;
+
+  /* ============================================================ 时间轴 */
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+
+  // 隐藏态用 gsap.set，不写在 CSS 里（与 yPercent 叠加会打架）
+  const chs = ['#ch-one', '#ch-two', '#ch-three', '#ch-all'].map(s => document.querySelector(s));
+  const huds = [...document.querySelectorAll('.hud__ch')];
+  gsap.set(chs, { opacity: 0 });
+  gsap.set(huds, { opacity: 0 });
+  gsap.set('.endcard', { opacity: 0 });
+
+  const reveal = (sel, at, opt) => {
+    const chars = document.querySelectorAll(sel + ' .ch');
+    tl.fromTo(chars, { yPercent: 140 }, { yPercent: 0, duration: .78, stagger: .028, ease: 'expo.out' }, at);
+    if (opt) opt();
+  };
+
+  /* 钩子 0–4s：一点炸成回声涟漪 */
+  tl.addLabel('scene:hook', 0)
+    .fromTo('.hud__tl', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: .7 }, .1)
+    .fromTo('.hud__tr', { opacity: 0 }, { opacity: 1, duration: .7 }, .1)
+    .to({}, { duration: 0 });
+  tl.fromTo(huds[0], { opacity: 0 }, { opacity: 1, duration: .6 }, .2);
+  OM.sfx('riser', 1.6, { dur: 1.6 });
+  OM.sfx('impact', 1.6, { gain: .8 });
+
+  /* 一 · 人与 AI（4–8s） */
+  tl.addLabel('scene:one', 4)
+    .fromTo(huds[1], { opacity: 0 }, { opacity: 1, duration: .5 }, 4.0)
+    .to(huds[0], { opacity: 0, duration: .4 }, 4.0)
+    .fromTo('#ch-one', { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .5 }, 4.05);
+  reveal('#ch-one', 4.18);
+  OM.sfx('hit', 4.0, { gain: .55 });
+  OM.sfx('pop', 4.18, { gain: .38, note: 1 });
+  OM.sfx('thud', 4.96, { gain: .7 });
+
+  /* 二 · AI 与 AI（8–12s）：montage 爆发，四个快切 */
+  tl.addLabel('scene:two', 8)
+    .fromTo(huds[2], { opacity: 0 }, { opacity: 1, duration: .4 }, 8.0)
+    .to(huds[1], { opacity: 0, duration: .35 }, 8.0)
+    .to('#ch-one', { opacity: 0, x: -34, duration: .38 }, 8.0)
+    .fromTo('#ch-two', { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .45 }, 8.08);
+  reveal('#ch-two', 8.2);
+  OM.sfx('glitch', 8.0, { gain: .6 });
+  OM.sfx('pop', 8.62, { gain: .34, note: 3 });
+  OM.sfx('pop', 9.62, { gain: .34, note: 5 });
+  OM.sfx('pop', 10.62, { gain: .34, note: 6 });
+  OM.sfx('whoosh', 10.72, { gain: .4, dur: .5 });
+
+  /* 三 · 人与人（12–16s）：呼吸，暖 */
+  tl.addLabel('scene:three', 12)
+    .fromTo(huds[3], { opacity: 0 }, { opacity: 1, duration: .5 }, 12.0)
+    .to(huds[2], { opacity: 0, duration: .4 }, 12.0)
+    .to('#ch-two', { opacity: 0, x: -34, duration: .45 }, 12.0)
+    .fromTo('#ch-three', { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .5 }, 12.1);
+  reveal('#ch-three', 12.28);
+  OM.sfx('reverse', 12.0, { gain: .5, dur: .6 });
+
+  /* 万物（16–20s）：英雄镜头 */
+  tl.addLabel('scene:all', 16)
+    .fromTo(huds[4], { opacity: 0 }, { opacity: 1, duration: .45 }, 16.0)
+    .to(huds[3], { opacity: 0, duration: .4 }, 16.0)
+    .to('#ch-three', { opacity: 0, x: -34, duration: .45 }, 16.0)
+    .fromTo('#ch-all', { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .5 }, 16.12)
+    .fromTo('#ch-all .ch__chips span', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .5, stagger: .1, ease: 'expo.out' }, 16.9);
+  reveal('#ch-all', 16.3);
+  OM.sfx('riser', 16.0, { dur: .9, gain: .6 });
+  OM.sfx('impact', 16.0, { gain: .95 });
+
+  /* 加入（20–24s）：拱门 + 品牌 */
+  tl.addLabel('scene:join', 20)
+    .fromTo(huds[5], { opacity: 0 }, { opacity: 1, duration: .45 }, 20.0)
+    .to(huds[4], { opacity: 0, duration: .4 }, 20.0)
+    .to('#ch-all', { opacity: 0, x: -30, duration: .5 }, 20.0)
+    .fromTo('.endcard', { opacity: 0 }, { opacity: 1, duration: .5 }, 20.0)
+    .fromTo('.endcard__mark', { opacity: 0, scale: .6, rotation: -25 }, { opacity: 1, scale: 1, rotation: 0, duration: .8, ease: 'expo.out' }, 20.1)
+    .fromTo('.endcard__brand', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .8, ease: 'expo.out' }, 20.3)
+    .fromTo('.endcard__thesis', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .6 }, 20.6)
+    .fromTo('.endcard__cta', { opacity: 0, y: 20, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .6, ease: 'expo.out' }, 21.0)
+    .fromTo('.endcard__url', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .6 }, 21.2);
+
+  tl.addLabel('scene:logo', 22)
+    .fromTo('.endcard__brand', { letterSpacing: '.06em' }, { letterSpacing: '.2em', duration: 1.0, ease: 'expo.out' }, 22.0)
+    .fromTo('.endcard__mark', { scale: 1 }, { scale: 1.08, duration: 1.0, ease: 'power2.out' }, 22.0);
+  OM.sfx('stamp', 22.02, { gain: .7 });
+  OM.sfx('ding', 22.08, { gain: .4, note: 5 });
+  tl.to({}, { duration: V.endHold });
+
+  /* 音乐：自写的 ABC 乐谱，!mark 与 scene 标签对齐 */
+  OM.music({ bpm: 120 });
+
+  /* 画布由时间轴驱动：位置 = f(seed, t)，逐帧一致 */
+  OM.clock(tl, draw, DUR);
+
+  window.__timelines['film'] = tl;
+})();
+</script>
+</body>
+</html>

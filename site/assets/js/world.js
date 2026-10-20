@@ -197,6 +197,7 @@
     return { segs, total: off * vh };
   }
 
+  let lastChapter = -1;
   function updateChapter() {
     if (!SEGMENTS.length) return;
     const y = window.scrollY || window.pageYOffset;
@@ -219,6 +220,11 @@
       mix = 0.35 + 0.65 * (t * t * (3 - 2 * t));
     }
     field.setChapter(a, b, mix);
+    // 章节切换：气流扫过 + 一点落点（与宣传片同一套音效词汇）
+    if (a !== lastChapter) {
+      if (lastChapter >= 0) { SWSfx.play('whoosh'); SWSfx.play('hit'); }
+      lastChapter = a;
+    }
   }
 
   /* ------------------------------------------------------- 指针 / 触摸 */
@@ -288,6 +294,7 @@
       </div>
       <div class="sw-hud__row sw-hud__row--btns">
         <button type="button" data-toggle="events" data-i18n="events"></button>
+        <button type="button" data-toggle="sound" data-i18n="sound"></button>
         <button type="button" data-toggle="video" data-i18n="video"></button>
         <button type="button" data-action="shock" data-i18n="pulse"></button>
       </div>
@@ -367,8 +374,19 @@
     msg(on ? T().messages.videoOn : T().messages.videoOff);
   });
 
+  const soundBtn = hud.querySelector('[data-toggle="sound"]');
+  function syncSoundBtn() {
+    soundBtn.classList.toggle('is-on', SWSfx.enabled);
+    soundBtn.textContent = (SWSfx.enabled ? '声音 ' : '静音 ') + (lang === 'zh' ? '开' : 'on');
+  }
+  soundBtn.addEventListener('click', () => {
+    SWSfx.toggle();
+    syncSoundBtn();
+  });
+
   hud.querySelector('[data-action="shock"]').addEventListener('click', () => {
     field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.5, 1.4);
+    SWSfx.play('subdrop');
     flash(T().messages.pulse);
   });
 
@@ -430,6 +448,7 @@
     if (modal.classList.contains('is-open')) return;
     lastFocus = document.activeElement;
     modal.classList.add('is-open');
+    SWSfx.play('impact');
     const ok = modal.querySelector('.sw-modal__ok');
     if (ok) ok.focus({ preventScroll: true });
   }
@@ -437,6 +456,7 @@
   function closeModal() {
     if (!modal.classList.contains('is-open')) return;
     modal.classList.remove('is-open');
+    SWSfx.play('close');
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
   }
 
@@ -561,9 +581,11 @@
     const btn = e.target.closest('button[data-lang]');
     if (!btn) return;
     applyLang(btn.dataset.lang, true);
+    SWSfx.play('glitch');
   });
 
   applyLang(lang, false);
+  syncSoundBtn();
 
   /* --------------------------------------------------------- 滚动同步 */
   function scrollLoop() {

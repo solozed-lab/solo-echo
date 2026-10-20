@@ -4,6 +4,11 @@ work/raw/
 # 浏览器验收截图（21M）—— 由插件的 scripts/cdp_verify.js 复现
 work/qa/
 work/qa-en/
+# 宣传片工程产物：vendor 是第三方库，out 是渲染结果（46M）
+film/vendor/
+film/out/
+film/.om/
+film/*.png
 # 打包产物
 *.zip
 
