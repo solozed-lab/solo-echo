@@ -29,33 +29,35 @@
     color: var(--ink); font-family: "Noto Sans SC", "Inter", system-ui, sans-serif; font-weight: 500;
   }
   #field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scrim { position: absolute; inset: 0; pointer-events: none;
+           background: linear-gradient(96deg, rgba(2,4,11,.94) 0%, rgba(2,4,11,.86) 22%, rgba(2,4,11,.42) 42%, rgba(2,4,11,0) 58%); }
   .grain { position: absolute; inset: 0; pointer-events: none; opacity: .45; mix-blend-mode: overlay;
     background-image: radial-gradient(rgba(255,255,255,.09) .5px, transparent .5px); background-size: 3px 3px; }
+  .flash { position: absolute; inset: 0; pointer-events: none; background: #cfeaff; opacity: 0; mix-blend-mode: screen; }
 
-  .hud { position: absolute; inset: 0; pointer-events: none; font-family: "Roboto Condensed", "Inter", monospace; }
+  .hud { position: absolute; inset: 0; pointer-events: none; font-family: "Roboto Condensed", "Inter", monospace;
+          text-shadow: 0 1px 14px rgba(2,5,12,.95), 0 0 3px rgba(2,5,12,.9); }
   .hud__tl { position: absolute; left: 56px; top: 44px; font-size: 20px; letter-spacing: .42em; color: #b6c9e0; }
-  .hud__tr { position: absolute; right: 56px; top: 44px; font-size: 18px; letter-spacing: .26em; color: #8ba1bf; }
-  .hud__bl { position: absolute; left: 56px; bottom: 40px; font-size: 19px; letter-spacing: .24em; color: #9db3cd; }
+  .hud__tr { position: absolute; right: 56px; top: 44px; font-size: 18px; letter-spacing: .26em; color: #adc0d8; }
+  .hud__bl { position: absolute; left: 56px; bottom: 40px; font-size: 19px; letter-spacing: .24em; color: #aec2da; }
   .hud__ch { position: absolute; left: 56px; bottom: 40px; font-size: 19px; letter-spacing: .24em; opacity: 0; }
   .hud__ch b { color: var(--c-human); font-weight: 700; }
   .hud__dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--c-human);
               box-shadow: 0 0 12px var(--c-human); margin-right: 12px; }
-  .hud__prog { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--c-human); width: 0; opacity: .5; }
+  .hud__shot { position: absolute; right: 56px; bottom: 40px; font-size: 17px; letter-spacing: .2em; color: #9db2cd; }
 
-  /* 文字块：左侧锚定（终章居中） */
   .ln-anchor { position: absolute; left: 96px; top: 0; bottom: 0; width: 980px;
-                display: flex; align-items: center; pointer-events: none; }
+               display: flex; align-items: center; pointer-events: none; }
   .ln-anchor--center { left: 0; right: 0; width: auto; justify-content: center; text-align: center; }
   .ln { width: 100%; opacity: 0; }
   .ln__kick { display: flex; align-items: center; gap: 14px; font-size: 24px; letter-spacing: .22em;
               color: var(--c-human); margin-bottom: 26px; }
   .ln-anchor--center .ln__kick { justify-content: center; }
   .ln__kick i { display: block; width: 46px; height: 2px; background: currentColor; box-shadow: 0 0 14px currentColor; }
-  .ln__head { margin: 0; font-size: 74px; line-height: 1.18; font-weight: 900; letter-spacing: -.01em;
-               white-space: pre-line; }
+  .ln__head { margin: 0; font-size: 74px; line-height: 1.18; font-weight: 900; letter-spacing: -.01em; white-space: pre-line; }
   .ln__head .mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .18em; }
   .ln__head .ch { display: inline-block; }
-  .ln__sub { margin: 24px 0 0; font-size: 30px; line-height: 1.55; color: #9db3cd; max-width: 44ch; }
+  .ln__sub { margin: 24px 0 0; font-size: 30px; line-height: 1.55; color: #9db3cd; max-width: 46ch; }
   .ln-anchor--center .ln__sub { margin-left: auto; margin-right: auto; }
 
   .endcard { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
@@ -72,20 +74,22 @@
 </head>
 <body>
 <div id="film" data-composition-id="film5" data-width="1920" data-height="1080">
-  <audio id="om-sound" src="assets/sound.wav" data-start="0" data-duration="300.762" data-track-index="8" data-volume="1"></audio>
+  <audio id="om-sound" src="assets/sound.wav" data-start="0" data-duration="300" data-track-index="8" data-volume="1"></audio>
   <canvas id="field" width="1920" height="1080"></canvas>
+  <div class="scrim"></div>
   <div class="grain"></div>
+  <div class="flash" id="flash"></div>
 
   <div class="hud" data-layout-allow-occlusion aria-hidden="true">
     <div class="hud__tl" data-om-id="hudBrand">SOLO &amp; ECHO</div>
     <div class="hud__tr">SCROLL / DRAG / CONNECT</div>
+    <div class="hud__shot" id="hudShot">01 / 19</div>
     <div class="hud__ch" data-ch="0"><span class="hud__dot"></span><b>01</b> / 06 &nbsp;万物 · 起点</div>
     <div class="hud__ch" data-ch="1"><span class="hud__dot"></span><b>02</b> / 06 &nbsp;一 · 人与 AI</div>
     <div class="hud__ch" data-ch="2"><span class="hud__dot"></span><b>03</b> / 06 &nbsp;二 · AI 与 AI</div>
     <div class="hud__ch" data-ch="3"><span class="hud__dot"></span><b>04</b> / 06 &nbsp;三 · 人与人</div>
     <div class="hud__ch" data-ch="4"><span class="hud__dot"></span><b>05</b> / 06 &nbsp;犹如三生万物</div>
     <div class="hud__ch" data-ch="5"><span class="hud__dot"></span><b>06</b> / 06 &nbsp;加入</div>
-    <div class="hud__prog" id="hudProg"></div>
   </div>
 
   <div id="lines"></div>
@@ -103,42 +107,25 @@
 <script type="text/vnd.abc" id="om-score">
 X:1
 T:Solo & Echo · 犹如三生万物（长版：动机=回声 E–B–e–B，120BPM，300s）
-M:4/4
+M:2/4
 L:1/8
 Q:1/4=120
 K:Em
 V:PLK inst=synpluck gain=0.55
-!mark:hook! !pp! |:E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/:| 
-!mark:one! !mp! |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/:| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/:| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/:| 
-!mark:two! !mf! |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/:| 
-!mark:three! !mp! |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/:| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/:| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/:| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/:| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/:| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/:| 
-!mark:all! !ff! |:E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/:| 
-!mark:join! !mf! |:E2 B2 e2 B2 | G2 B2 e2 B2 | E2 B2 e2 B2 | G2 B2 e2 B2 | E8:| |:E2 B2 e2 B2 | G2 B2 e2 B2 | E2 B2 e2 B2 | G2 B2 e2 B2 | E8:| |:E2 B2 e2 B2 | G2 B2 e2 B2 | E2 B2 e2 B2 | G2 B2 e2 B2 | E8:| |:E2 B2 e2 B2 | G2 B2 e2 B2 | E2 B2 e2 B2 | G2 B2 e2 B2 | E8:| 
+!mark:hook! !pp! |:E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | e/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ G/B/e/B/ | e/B/e/B/ G/B/e/B/ | e/B/e/B/ B/B/B/B/ | E/B/e/B/ G/B/e/B/ | B,/G/d/G/ B,/G/d/G/ :| !mark:one! !mp! |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ :| |:E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ | C/G/e/G/ E/G/e/G/ | E/B/e/B/ G/B/e/B/ :| !mark:two! !mf! |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | B,/G/d/G/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | B,/G/d/G/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | B,/G/d/G/ G/B/e/B/ :| |:E/B/e/B/ E/B/e/B/ | G/B/e/B/ G/B/e/B/ | D/G/d/G/ D/G/d/G/ | B,/G/d/G/ B,/G/d/G/ | E/B/e/B/ G/B/e/B/ :| !mark:three! !mp! |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ | F/A/c/A/ G/B/d/B/ | G/B/e/B/ A/C/e/C/ :| |:G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | G/B/e/B/ A/C/e/C/ | B,/D/f/D/ C/E/g/E/ | D/F/a/F/ E/G/b/G/ :| !mark:all! !ff! !hit! |:E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ :| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ :| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ :| |:E'/B'/e'/B'/ G'/B'/e'/B'/ | C'/G'/e'/G'/ E'/G'/e'/G'/ | D'/G'/d'/G'/ B,'/G'/d'/G'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ | E'/B'/e'/B'/ G'/B'/e'/B'/ :| !mark:join! !mf! |:E B e B | G B e B | E B e B | G B e B | E4 :| |:E B e B | G B e B | E B e B | B, B, C C | E4 :| |:E B e B | G B e B | E B e B | G B e B | E4 :|
 V:BAS inst=synbass gain=0.8
-!pp! |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2:| 
-!mp! |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| 
-!mf! |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | B,,2 B,,2 B,,2 B,,2 | B,,2 B,,2 B,,2 B,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | B,,2 B,,2 B,,2 B,,2 | B,,2 B,,2 B,,2 B,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | B,,2 B,,2 B,,2 B,,2 | B,,2 B,,2 B,,2 B,,2 | E,,2 E,,2 E,,2 E,,2:| 
-!mp! |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | C,,8 | C,,8 | E,,8:| |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | C,,8 | C,,8 | E,,8:| |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | C,,8 | C,,8 | E,,8:| 
-!ff! |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | E,,2 E,,2 E,,2 E,,2:| |:E,,2 E,,2 E,,2 E,,2 | E,,2 E,,2 E,,2 E,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | E,,2 E,,2 E,,2 E,,2:| 
-!mf! |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| |:E,,8 | E,,8 | E,,8 | E,,8 | E,,8:| 
+|:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 :| |:D,,2 D,,2 | D,,2 D,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 :| |:D,,2 D,,2 | D,,2 D,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 :| |:D,,2 D,,2 | D,,2 D,,2 | E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,4 | E,,4 | E,,4 | C,,4 | C,,4 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,4 | E,,4 | E,,4 | C,,4 | C,,4 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,4 | E,,4 | E,,4 | C,,4 | C,,4 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 | D,,2 D,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 | C,,2 C,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | C,,2 C,,2 | C,,2 C,,2 | D,,2 D,,2 :| |:E,,2 E,,2 | E,,2 E,,2 | D,,2 D,,2 | D,,2 D,,2 | C,,2 C,,2 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :| |:E,,4 | E,,4 | E,,4 | C,,4 | C,,4 :| |:E,,4 | E,,4 | E,,4 | E,,4 | E,,4 :|
 V:DK inst=drums kit=808 gain=0.9
-!pp! |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| 
-!mp! |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| |:C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2 | C,,2 z2 C,,2 z2 C,,2 z2 C,,2:| 
-!mf! |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | D,,2 D,,2 D,,2 D,,2 | D,,2 D,,2 D,,2 D,,2 | C,,2 C,,2 C,,2 C,,2:| 
-!mp! |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| |:C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2 | C,,2 z2 z2 z2 C,,2 z2 z2 z2:| 
-!ff! |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| |:C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2 | C,,2 C,,2 C,,2 C,,2:| 
-!mf! |:C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2:| |:C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2:| |:C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2:| |:C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | C,,2 z2 z2 z2 z2 z2 z2 z2 | z2 z2 z2 z2 z2 z2 z2 z2:| 
+Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 | C,,2 C,,2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :| |:C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 | C,,2 z2 :|
 V:DH inst=drums kit=pop gain=0.5
-!mf! |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| |:^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, [D,,^F,,]^F,,:| 
-!ff! |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| |:^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,, | [D,,^F,,]^F,, ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, ^F,,^F,,:| 
+Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z !stop(! Z Z Z Z Z !stop)! |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| |:^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, | ^F,,^F,, [D,,^F,,]^F,, :| Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z
 V:VLN inst=violins role=melody gain=0.7
-!mp! |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| |:G,2 G,2 A,2 A,2 | B,2 B,2 C2 C2 | D2 D2 E2 E2 | F2 F2 G2 G2 | A2 A2 B,2 B,2:| 
-!ff! |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| |:[E'2 E'2] [G'2 G'2] | [E'2 E'2] [D'2 D'2] | [C'2 C'2] [E'2 E'2] | [B'2 B'2] [G'2 G'2] | [E'2 E'2] [G'2 G'2]:| 
+Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z |:G, G, A, A, | B, B, C C | D D E E | F F G G | A A B, B, :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | G, A, B, C :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | A A B, B, :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | G, A, B, C :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | A A B, B, :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | G, A, B, C :| |:G, G, A, A, | B, B, C C | D D E E | F F G G | A A B, B, :| |:[E' E'] [G' G'] [E' E'] [G' G'] | [E' E'] [D' D'] [E' E'] [D' D'] | [C' E'] [E' G'] [C' E'] [E' G'] | [B' D'] [G' B'] [B' D'] [G' B'] | [E' E'] [G' G'] [E' E'] [G' G'] :| |:[E' E'] [G' G'] [E' E'] [G' G'] | [C' E'] [E' G'] [C' E'] [E' G'] | [B' D'] [G' B'] [B' D'] [G' B'] | [E' E'] [G' G'] [E' E'] [G' G'] | [E' E'] [G' G'] [E' E'] [G' G'] :| |:[E' E'] [G' G'] [E' E'] [G' G'] | [E' E'] [D' D'] [E' E'] [D' D'] | [C' E'] [E' G'] [C' E'] [E' G'] | [B' D'] [G' B'] [B' D'] [G' B'] | [E' E'] [G' G'] [E' E'] [G' G'] :| |:[E' E'] [G' G'] [E' E'] [G' G'] | [C' E'] [E' G'] [C' E'] [E' G'] | [B' D'] [G' B'] [B' D'] [G' B'] | [E' E'] [G' G'] [E' E'] [G' G'] | [E' E'] [G' G'] [E' E'] [G' G'] :| Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z
 </script>
 <script>
 (() => {
   const V = OM.vars();
-  const W = 1920, H = 1080, TAU = Math.PI * 2;
+  const W = 1920, H = 1080, TAU = Math.PI * 2, CX = W / 2, CY = H / 2;
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const clamp01 = v => clamp(v, 0, 1);
   const smooth = x => { x = clamp01(x); return x * x * (3 - 2 * x); };
@@ -163,7 +150,7 @@ V:VLN inst=violins role=melody gain=0.7
   const ROLE_COL = [null, hex(V.cHuman), hex(V.cAI), hex(V.cAI2), hex(V.cWarm), [1,1,1]];
   const ACCENT = { start: hex(V.cHuman), one: hex(V.cAI), two: hex(V.cAI2), three: hex(V.cWarm), all: hex(V.cHuman), join: hex(V.cAI) };
 
-  const DRIFT_GAIN = 4.2;   // 5 分钟尺度上，形态停住后粒子仍要"活着"
+  const DRIFT_GAIN = 4.2;
   const drift = (i, t, amp, sp) => {
     const a = pu[i] * TAU, b = pv[i] * TAU;
     return [
@@ -173,287 +160,328 @@ V:VLN inst=violins role=melody gain=0.7
   };
   const sideOf = i => (role[i] === 2 || role[i] === 3) ? -1 : (role[i] === 1 ? 1 : (pu[i] < .52 ? -1 : 1));
 
-  /* ---------------- 形态变体 ---------------- */
+  /* ---------------- 通用构图原语 ---------------- */
+  const ring = (i, t, cx, cy, R, ry, spin) => {
+    const a = pu[i] * TAU + (spin || 0) * t;
+    return [cx + Math.cos(a) * R, cy + Math.sin(a) * (ry == null ? R : ry)];
+  };
+  const blob = (i, t, cx, cy, R, wob) => {
+    const a = pv[i] * TAU, r = (0.1 + 0.9 * pw[i]) * R;
+    return [cx + Math.cos(a) * r + Math.cos(pu[i] * TAU + t * .7) * (wob || 0),
+            cy + Math.sin(a) * r + Math.sin(pv[i] * TAU + t * .6) * (wob || 0)];
+  };
+  const grid = (i, t, cx, cy, cols, rows, w, h) => {
+    const c = Math.floor(pu[i] * cols), r = Math.floor(pw[i] * rows);
+    return [cx + ((c + .5) / cols - .5) * w, cy + ((r + .5) / rows - .5) * h];
+  };
+  const flow = (i, t, x0, x1, y, spread) => {
+    const p = (t * .5 + pv[i]) % 1;
+    return [mix(x0, x1, p), y + (pw[i] - .5) * spread];
+  };
+
+  /* ==========================================================
+     19 个分镜的形态：每个分镜一种"看得懂的画面"
+     ========================================================== */
   const SH = {};
+  /* 形态一律返回**以画面中心为原点**的坐标（0,0 = 中心）：
+     渲染层再乘镜头、加半屏偏移，旧版把 CX/CY 写进形态里，等于偏移了两次。 */
 
-  SH.ignite = [
-    (i, t) => {
-      if (t < 0.25) return [(pu[i] - .5) * 3, (pv[i] - .5) * 3];
-      if (t < 2.1) {
-        const k = (t - .25) / 1.85, ang = pu[i] * TAU, R = k * 620, th = (pv[i] - .5) * 46;
-        const d = drift(i, t, 3, .8);
-        return [Math.cos(ang) * (R + th) + d[0], Math.sin(ang) * (R + th) * .76 + d[1]];
-      }
-      const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z)), ang = pu[i] * TAU;
-      const R = (0.18 + 0.82 * pv[i]) * 470, d = drift(i, t, 26, .55);
-      return [Math.cos(ang) * rr * R * 1.3 + d[0], Math.sin(ang) * rr * R * .78 + d[1]];
+  // 00 起点：一点炸成回声涟漪
+  SH.ignite = (i, t) => {
+    if (t < 0.25) return [(pu[i] - .5) * 3, (pv[i] - .5) * 3];
+    if (t < 2.1) {
+      const k = (t - .25) / 1.85, ang = pu[i] * TAU, R = k * 620, th = (pv[i] - .5) * 46;
+      const d = drift(i, t, 1.2, .8);
+      return [Math.cos(ang) * (R + th) + d[0], Math.sin(ang) * (R + th) * .76 + d[1]];
     }
-  ];
+    const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z)), ang = pu[i] * TAU;
+    const R = (0.18 + 0.82 * pv[i]) * 470, d = drift(i, t, 9, .55);
+    return [Math.cos(ang) * rr * R * 1.3 + d[0], Math.sin(ang) * rr * R * .78 + d[1]];
+  };
 
-  SH.bipolar = [
-    // v0 分开：两簇离得很远
-    (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 175;
-      const d = drift(i, t, 20, .55);
-      return [s * 360 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
-    },
-    // v1 桥接：中间长出一条连线
-    (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 170;
-      const d = drift(i, t, 20, .6);
-      if (role[i] === 0 && pv[i] < .2) {
-        const u = pw[i], y = (pv[i] / .2 - .5) * 130;
-        return [mix(-330, 330, u) + d[0], y + d[1]];
-      }
-      return [s * 330 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
-    },
-    // v2 对话脉冲：信号在两极之间往返
-    (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 165;
-      const d = drift(i, t, 18, .6);
-      if (role[i] === 0 && pv[i] < .22) {
-        const phase = (t * .34 + pw[i]) % 1;
-        const x = mix(-300, 300, phase);
-        const y = (pv[i] / .22 - .5) * 120;
-        return [x + d[0] * .5, y + d[1] * .5];
-      }
-      return [s * 300 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
-    },
-    // v3 共享轨道：两簇绕共同中心转
-    (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 160;
-      const a = t * .26 + (s < 0 ? Math.PI : 0);
-      const d = drift(i, t, 16, .6);
-      return [Math.cos(a) * 300 + Math.cos(ang) * R * 1.2 + d[0], Math.sin(a) * 200 + Math.sin(ang) * R + d[1]];
-    },
-    // v4 稳定：一层共同的环
-    (i, t) => {
-      const s = sideOf(i), ang = pu[i] * TAU, R = (0.12 + .88 * pv[i]) * 165;
-      const d = drift(i, t, 16, .5);
-      if (role[i] === 0 && pz[i] < .16) {
-        const a2 = pu[i] * TAU, R2 = 400;
-        return [Math.cos(a2) * R2 * 1.2 + d[0], Math.sin(a2) * R2 * .62 + d[1]];
-      }
-      return [s * 300 + Math.cos(ang) * R * 1.25 + d[0], Math.sin(ang) * R + d[1]];
+  // 01 追问：光射出去，又折回来
+  SH.ask = (i, t) => {
+    if (role[i] === 0 && pv[i] < 0.42) {
+      const p = (t * .55 + pv[i] / .42) % 1;
+      const dir = p < .5 ? 1 : -1;
+      const q = Math.abs(p - .5) * 2;
+      return [dir * q * 460, -150 + Math.sin(q * Math.PI) * 70];
     }
-  ];
+    return blob(i, t, 0, 130, 180, 12);
+  };
 
-  SH.lattice = [
-    (i, t) => gridShape(i, t, 0),
-    (i, t) => gridShape(i, t, 1),
-    (i, t) => gridShape(i, t, 2),
-    (i, t) => gridShape(i, t, 3),
-    (i, t) => gridShape(i, t, 4)
-  ];
-  function gridShape(i, t, mode) {
-    const d = drift(i, t, 10, .9);
-    const isAI = role[i] === 2 || role[i] === 3;
-    const signal = role[i] === 0 && pv[i] < .22;
-    if (signal) {
-      // 信号流：沿中轴来回穿梭
-      const phase = (t * (mode === 3 ? .55 : .38) + pw[i]) % 1;
-      const dir = pw[i] < .5 ? phase : 1 - phase;
-      return [mix(-320, 320, dir) + d[0], (pv[i] / .22 - .5) * 95 + d[1]];
+  // 02 补全：两列代码条带（行距要大于连线半径 132px，否则行间会连成一片）
+  SH.cowrite = (i, t) => {
+    const rows = 5, row = Math.floor(pw[i] * rows);
+    const col = (pu[i] + (role[i] === 0 ? 0 : .5)) % 1 < .5 ? -1 : 1;
+    const head = Math.floor(t * .9) % rows;
+    if (role[i] === 0) {                       // 光标：正在写的那一行的末端
+      const u = (pv[i] * 3.1) % 1;
+      return [col * (540 + u * 30), -300 + head * 150 + (u - .5) * 70];
     }
-    const side = (mode === 2) ? (isAI ? 1 : -1) : (isAI ? -1 : 1);
-    const col = Math.floor(pu[i] * 5), row = Math.floor(pw[i] * 7);
-    const gx = (col + .5) / 5 - .5, gy = (row + .5) / 7 - .5;
-    const jitter = mode === 4 ? (pz[i] - .5) * 14 : 0;
-    return [side * 235 + gx * 190 + jitter + d[0], gy * 300 + d[1]];
-  }
+    const u = (pu[i] * 6.7) % 1;
+    const len = 210 + 250 * (.4 + .6 * Math.abs(Math.sin(row * 2.399 + (col > 0 ? 1.1 : 0))));
+    return [col * (110 + u * len), -300 + row * 150];
+  };
 
-  SH.cluster = [
-    (i, t) => clusterShape(i, t, 0),
-    (i, t) => clusterShape(i, t, 1),
-    (i, t) => clusterShape(i, t, 2),
-    (i, t) => clusterShape(i, t, 3),
-    (i, t) => clusterShape(i, t, 4)
-  ];
-  function clusterShape(i, t, mode) {
-    const d = drift(i, t, 20, .7);
-    if (mode === 2 || mode === 3 || mode === 4) {
-      // 聚成一个社群球
-      const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z)), ang = pu[i] * TAU + t * .12;
-      const breathe = mode === 3 ? 1 + Math.sin(t * .8) * .07 : 1;
-      const R = (mode === 2 ? 300 : mode === 3 ? 330 : 380) * breathe;
-      return [Math.cos(ang) * rr * R * 1.15 + d[0] * .6, Math.sin(ang) * rr * R + d[1] * .6];
-    }
-    const c = Math.floor(pu[i] * 4), a = c / 4 * TAU + t * .16;
-    const spread = mode === 1 ? .72 : 1;
-    const cx = Math.cos(a) * 300 * spread, cy = Math.sin(a) * 185 * spread;
-    const ang = pv[i] * TAU, R = (0.1 + 0.9 * pw[i]) * 150;
-    if (mode === 1 && role[i] === 0 && pz[i] < .2) {
-      // 簇之间的连线
-      const u = pw[i], y = (pz[i] / .2 - .5) * 110;
-      return [mix(-260, 260, u) + d[0] * .6, y + d[1] * .6];
-    }
-    return [cx + Math.cos(ang) * R * 1.2 + d[0], cy + Math.sin(ang) * R + d[1]];
-  }
+  // 03 反驳：两团对撞，中间留一道排斥的缝
+  SH.rebut = (i, t) => {
+    const s = sideOf(i);
+    const push = 1 + Math.sin(t * 1.3) * .09;
+    return blob(i, t, s * 320 * push, 0, 205, 16);
+  };
 
-  SH.sphere = [
-    (i, t) => sphereShape(i, t, 0),
-    (i, t) => sphereShape(i, t, 1),
-    (i, t) => sphereShape(i, t, 2),
-    (i, t) => sphereShape(i, t, 3),
-    (i, t) => sphereShape(i, t, 4)
-  ];
-  function sphereShape(i, t, mode) {
-    const d = drift(i, t, 12, .5);
-    if (mode === 0) {
-      // 三道流光从三个方向飞入（沿射线拉长，合流时收紧）
-      const k = clamp01(t / 7);
-      const lane = role[i] === 1 ? 0 : (role[i] === 2 || role[i] === 3) ? 1 : 2;
-      const a = lane * 2.0944;
-      const rr = mix(1020, 430, k);
-      // 沿射线持续流动：粒子不是静止的一团，而是真的在"流"
-      const flow = (t * .8 + pv[i]) % 1;
-      const along = (flow - .5) * 900 * (1 - k * .45);   // 拉长成流线
-      const wide = (pw[i] - .5) * 72;
-      const ca = Math.cos(a), sa = Math.sin(a);
-      return [ca * (rr + along) - sa * wide, sa * (rr + along) * .82 + ca * wide * .82];
+  // 04 记得：一圈记忆节点按序点亮
+  SH.remember = (i, t) => {
+    const idx = Math.floor(pu[i] * 18);
+    const head = Math.floor(t * 2.5) % 18;
+    const on = ((head - idx + 18) % 18) < 3;
+    const a = pu[i] * TAU;
+    return [Math.cos(a) * 320 * 1.2, Math.sin(a) * 320 * .8 + (on ? 0 : -14)];
+  };
+
+  // 05 边界：一条清晰的界线，线外的粒子被挡在外面
+  SH.boundary = (i, t) => {
+    if (role[i] === 0 && pv[i] < .38) {
+      return [-190 + pw[i] * 380, (pu[i] - .5) * 8];
     }
+    const s = pu[i] < .5 ? -1 : 1;
+    const d = 80 + pv[i] * 170;
+    return [s * (250 + d), (pw[i] - .5) * 420];
+  };
+
+  // 06 接力：三个节点串成链，光沿线传递
+  SH.relay = (i, t) => {
+    const xs = [-290, 0, 290];
+    const prog = (t * .45) % 1;
+    if (role[i] === 0 && pv[i] < .4) {
+      const seg = Math.min(1, Math.floor(prog * 2));
+      const u = prog * 2 - seg;
+      return [mix(xs[seg], xs[seg + 1], u), Math.sin(u * Math.PI) * -46];
+    }
+    const idx = Math.min(2, Math.floor(pu[i] * 3));
+    const a = pv[i] * TAU, r = (0.1 + 0.9 * pw[i]) * 76;
+    const lit = 1 - Math.min(1, Math.abs(prog * 2 - idx));
+    return [xs[idx] + Math.cos(a) * r, Math.sin(a) * r * .92 - lit * 10];
+  };
+
+  // 07 互相纠正：两团之间来回的信号弧
+  SH.debate = (i, t) => {
+    if (role[i] === 0 && pv[i] < .3) {
+      const p = (t * .7 + pv[i] / .3) % 1;
+      const dir = p < .5 ? 1 : -1;
+      const q = Math.abs(p - .5) * 2;
+      return [mix(-290, 290, q), dir * Math.sin(q * Math.PI) * 205];
+    }
+    return blob(i, t, sideOf(i) * 300, 0, 185, 14);
+  };
+
+  // 08 共享记忆：中心一个球，两边各一团直连
+  SH.sharedmem = (i, t) => {
+    if (role[i] === 0 && pv[i] < .34) {
+      const s = pu[i] < .5 ? -1 : 1;
+      const k = pw[i];
+      return [s * mix(0, 360, k), Math.sin(k * 3.1) * 20];
+    }
+    if (role[i] === 0 && pv[i] < .5) {
+      const a = pu[i] * TAU, z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z));
+      return [Math.cos(a) * rr * 150, Math.sin(a) * rr * 150];
+    }
+    const s = pu[i] < .5 ? -1 : 1;
+    return blob(i, t, s * 380, 0, 180, 16);
+  };
+
+  // 09 看不见的那一段：一长串信号横穿画面
+  SH.blackbox = (i, t) => {
+    const p = (t * .32 + pu[i]) % 1;
+    const y = (pv[i] - .5) * 260;
+    const fade = Math.sin(p * Math.PI);
+    return [mix(-880, 880, p), y * (0.4 + fade * 0.6) - 40];
+  };
+
+  // 10 新的能力：一簇粒子从无到有地长出来
+  SH.newcap = (i, t) => {
+    const k = clamp01(t / 6);
+    const a = pv[i] * TAU, r = (0.05 + 0.95 * pw[i]) * 300 * k;
+    const rise = (1 - k) * 260;
+    return [Math.cos(a) * r, -60 + Math.sin(a) * r * .9 - rise];
+  };
+
+  // 11 先开口：两个远点，一个先亮，线连过去
+  SH.firstword = (i, t) => {
+    const left = pu[i] < .5;
+    const k = clamp01((t - 1.2) / 3.4);
+    if (role[i] === 0 && pv[i] < .22) {
+      return [mix(-430, 430, k), (pw[i] - .5) * 10];
+    }
+    return blob(i, t, left ? -430 : 430, 0, 150, 12);
+  };
+
+  // 12 一句话引来一串：一条线分裂成多条
+  SH.thread = (i, t) => {
+    if (role[i] === 0 && pv[i] < .46) {
+      const k = pw[i], branch = Math.floor(pu[i] * 7);
+      const reach = clamp01((t - 1) / 5);
+      const spread = (branch - 3) * 78;
+      return [120 + k * 700 * reach, spread * k * reach];
+    }
+    return blob(i, t, -300, 0, 150, 12);
+  };
+
+  // 13 一起解决：五个人围成圆，一起向内用力
+  SH.together = (i, t) => {
+    const n = 4, idx = Math.min(n - 1, Math.floor(pu[i] * n));
+    const a = idx / n * TAU + t * .12;
+    const squeeze = 1 - Math.abs(Math.sin(t * .55)) * .22;
+    const cx = Math.cos(a) * 360 * squeeze, cy = Math.sin(a) * 360 * squeeze * .8;
+    const ang = pv[i] * TAU, r = (0.08 + 0.92 * pw[i]) * 68;
+    return [cx + Math.cos(ang) * r, cy + Math.sin(ang) * r];
+  };
+
+  // 14 连接不是流量：两点短暂连上又断开
+  SH.stranger = (i, t) => {
+    const on = Math.sin(t * 1.1) > -.2;
+    if (role[i] === 0 && pv[i] < .3 && on) {
+      const k = pw[i];
+      return [mix(-480, 480, k), (pu[i] - .5) * 8];
+    }
+    return blob(i, t, pu[i] < .5 ? -480 : 480, 0, 155, 12);
+  };
+
+  // 15 温度：暖色粒子在两点之间流动
+  SH.warmth = (i, t) => {
+    if (role[i] === 0 && pv[i] < .4) {
+      const p = (t * .34 + pw[i]) % 1;
+      return [mix(-500, 500, p), Math.sin(p * Math.PI) * (pv[i] / .4) * 180 - 60];
+    }
+    return blob(i, t, -500, 0, 165, 12);
+  };
+
+  // 16 涌现：三色合流成球，球上冒出小簇
+  SH.emerge = (i, t) => {
     const z = pz[i] * 2 - 1, rr = Math.sqrt(Math.max(0, 1 - z * z));
-    const ang = pu[i] * TAU + t * (mode >= 3 ? .16 : .1);
-    let R = 430 + (pv[i] - .5) * 40;
-    if (mode === 3) {
-      // 涌现：外圈卫星
-      const s = role[i] === 0 && pz[i] < .22;
-      if (s) {
-        const a2 = pu[i] * TAU + t * .5;
-        const R2 = 520 + (pv[i] / .22 - .5) * 70;
-        return [Math.cos(a2) * R2 * 1.15 + d[0], Math.sin(a2) * R2 * .85 + d[1]];
-      }
-      R = 400;
+    const ang = pu[i] * TAU + t * .12;
+    if (role[i] === 0 && pv[i] < .2) {
+      const a2 = pu[i] * TAU + t * .6;
+      const R2 = 520 + (pv[i] / .2 - .5) * 90;
+      return [Math.cos(a2) * R2 * 1.15, Math.sin(a2) * R2 * .85];
     }
-    if (mode === 4) R = 470;
-    return [Math.cos(ang) * rr * R * 1.12 + d[0], Math.sin(ang) * rr * R + d[1]];
-  }
+    const R = 400 + (pv[i] - .5) * 40;
+    return [Math.cos(ang) * rr * R * 1.12, Math.sin(ang) * rr * R - 60];
+  };
 
-  SH.gate = [
-    (i, t) => gateShape(i, t, 0),
-    (i, t) => gateShape(i, t, 1),
-    (i, t) => gateShape(i, t, 2),
-    (i, t) => gateShape(i, t, 3)
-  ];
-  function gateShape(i, t, mode) {
-    const d = drift(i, t, 12, .6);
-    if (mode === 2 || mode === 3) {
-      // 收成品牌标记（圆角方）
+  // 17 不是被造出来的：粒子自己聚成一个新形态
+  SH.notmade = (i, t) => {
+    const k = clamp01(t / 8);
+    const a = pu[i] * TAU, r = (0.15 + 0.85 * pw[i]) * 300 * k;
+    const spiral = a + r * .012;
+    return [Math.cos(spiral) * r * 1.35, Math.sin(spiral) * r * .9 - 40];
+  };
+
+  // 18 加入：拱门 + 品牌
+  SH.gate = (i, t) => {
+    const d = drift(i, t, 4, .6);
+    const base = 570;                       // 拱门压到画面下半，给居中文字和尾卡让位
+    if (pv[i] < .3) {
       const side = pu[i] < .5 ? -1 : 1;
-      const sx = Math.sign(pu[i] - .5), sy = Math.sign(pv[i] - .5);
-      const m = 300;
-      return [sx * m * .8, sy * m * .8];
-    }
-    const leg = pv[i] < .3;
-    if (leg) {
-      const side = pu[i] < .5 ? -1 : 1;
-      const h = (pv[i] / .3) * 330;
-      if (mode === 1) {
-        // 往门里流
-        const phase = (t * .5 + pw[i]) % 1;
-        return [side * 330 * (1 - phase) + d[0], 330 - h * phase + d[1]];
-      }
-      return [side * 330 + d[0], 330 - h + d[1]];
+      const h = (pv[i] / .3) * 300;
+      return [side * 330 + d[0], base - h + d[1]];
     }
     const u = pu[i] * 2 - 1;
     const ang = Math.acos(clamp(u, -1, 1));
-    const R = 330;
-    return [Math.cos(ang) * R * 1.1 + d[0], 330 - Math.sin(ang) * R + d[1]];
-  }
+    return [Math.cos(ang) * 330 * 1.1 + d[0], base - Math.sin(ang) * 300 + d[1]];
+  };
 
   /* ==========================================================
-     场景与文案
+  /* ==========================================================
+     19 个分镜
      ========================================================== */
-  const SCENES = [
-    { id:'hook', t:0, dur:20, shape:'ignite', vars:1, acc:'start',
-      cam:[{t:0,zoom:1.62,x:0,y:-20},{t:1.2,zoom:1.0,x:0,y:0},{t:10,zoom:1.1,x:0,y:-10},{t:19,zoom:1.02,x:0,y:0}],
+  const SHOTS = [
+    { id:'origin', dur:20, shape:'ignite', acc:'start', chapter:0, cam:[{z:1.62,x:0,y:-20},{z:1.0,x:0,y:0}],
       lines:[
-        { at:1.5, dur:15, kicker:'万物 · 起点', head:'一切从一个节点开始', sub:'最初的节点是人', sfx:['riser','impact'] }
+        { at:1.5, head:'一切从一个节点开始', sub:'最初的节点是人' },
+        { at:10, head:'而它会长出三种关系', sub:'人与 AI、AI 与 AI、人与人' }
       ]},
-    { id:'one', t:20, dur:60, shape:'bipolar', vars:5, acc:'one',
-      cam:[{t:20,zoom:1.02,x:-450,y:-16},{t:32,zoom:1.14,x:-420,y:-34},{t:44,zoom:1.0,x:-450,y:-16},{t:56,zoom:1.12,x:-440,y:-30},{t:79,zoom:1.04,x:-450,y:-16}],
-      lines:[
-        { at:1, dur:12, kicker:'一 · 人与 AI', head:'AI 不是工具，\n而是另一个数字的伙伴', sub:'它由数字构成，却不只是一个数字', sfx:['hit','thud'] },
-        { at:14, dur:12, head:'它记得你说过的话', sub:'也记得你不想再被问起的事', sfx:['pop'] },
-        { at:27, dur:12, head:'它有偏好，会固执', sub:'它有边界，会拒绝', sfx:['pop'] },
-        { at:40, dur:15, head:'回应你的\n不再是一段话', sub:'而是一直都在的另一方', sfx:['chime'] }
-      ]},
-    { id:'two', t:80, dur:60, shape:'lattice', vars:5, acc:'two',
-      cam:[{t:80,zoom:1.0,x:-450,y:-16},{t:92,zoom:1.1,x:-460,y:-6},{t:104,zoom:.96,x:-430,y:-24},{t:116,zoom:1.12,x:-470,y:-4},{t:130,zoom:1.0,x:-450,y:-16},{t:139,zoom:1.04,x:-450,y:-16}],
-      lines:[
-        { at:1, dur:12, kicker:'二 · AI 与 AI', head:'当智能体开始\n彼此对话', sub:'一个模型调用另一个模型', sfx:['glitch','hit'] },
-        { at:14, dur:12, head:'它们质询彼此', sub:'在对方的错误里修正自己', sfx:['pop'] },
-        { at:27, dur:12, head:'一次任务，\n串起一串推理', sub:'其中没有一环是你亲手写的', sfx:['pop'] },
-        { at:40, dur:15, head:'能力不再属于\n某个模型', sub:'而属于节点之间刚刚发生的连接', sfx:['chime'] }
-      ]},
-    { id:'three', t:140, dur:60, shape:'cluster', vars:5, acc:'three',
-      cam:[{t:140,zoom:1.06,x:-450,y:-16},{t:152,zoom:.98,x:-440,y:-24},{t:164,zoom:1.12,x:-460,y:-8},{t:176,zoom:1.0,x:-450,y:-16},{t:190,zoom:1.08,x:-455,y:-20},{t:199,zoom:1.0,x:-450,y:-16}],
-      lines:[
-        { at:1, dur:12, kicker:'三 · 人与人', head:'人与人之间，\n重新回归连接', sub:'在一个人人都在线的时代', sfx:['hit','thud'] },
-        { at:14, dur:12, head:'稀缺的从来\n不是渠道', sub:'是有人愿意先开口', sfx:['pop'] },
-        { at:27, dur:12, head:'我们把技术用在\n让人重新相遇的地方', sub:'而不是让相遇变少', sfx:['pop'] },
-        { at:40, dur:15, head:'信任需要被重新建立', sub:'一次真实的对话就够了', sfx:['chime'] }
-      ]},
-    { id:'all', t:200, dur:60, shape:'sphere', vars:5, acc:'all',
-      cam:[{t:200,zoom:1.0,x:-450,y:0},{t:212,zoom:.9,x:-420,y:10},{t:224,zoom:.86,x:-390,y:0},{t:236,zoom:.8,x:-380,y:10},{t:248,zoom:.9,x:-420,y:0},{t:259,zoom:1.0,x:-450,y:0}],
-      lines:[
-        { at:1, dur:12, kicker:'万物', head:'犹如三生万物', sub:'人与 AI、AI 与 AI、人与人', sfx:['riser','impact','subdrop'] },
-        { at:14, dur:12, head:'三种关系同时成立', sub:'新的东西不需要被发明', sfx:['pop'] },
-        { at:27, dur:12, head:'它们自己生长，\n自己连接，自己提问', sub:'像涟漪一样扩散', sfx:['pop'] },
-        { at:40, dur:15, head:'万物不是\n被造出来的', sub:'是被关系带出来的', sfx:['chime','sparkle'] }
-      ]},
-    { id:'join', t:260, dur:40, shape:'gate', vars:4, acc:'join',
-      cam:[{t:260,zoom:1.0,x:0,y:0},{t:272,zoom:1.12,x:0,y:-10},{t:284,zoom:1.02,x:0,y:0},{t:299,zoom:1.06,x:0,y:0}],
-      lines:[
-        { at:1, dur:11, kicker:'加入我们', head:'让你的回声，\n被更多节点听见', sub:'这里有正在造 AI 的人', sfx:['whoosh','hit'] },
-        { at:13, dur:11, head:'有正在和人机协作的\n团队', sub:'也有一群自己就会互相连接的智能体', sfx:['pop'] },
-        { at:25, dur:12, head:'进来，把你的节点接上', sub:'', sfx:['stamp','ding'] }
-      ]}
+
+    { id:'ask', dur:14, shape:'ask', acc:'one', chapter:1, cam:[{z:1.1,x:0,y:0},{z:1.0,x:0,y:0}],
+      lines:[{ at:1.2, kicker:'一 · 人与 AI', head:'它会追问', sub:'你说"帮我写个方案"，它先问：写给谁看？' }]},
+    { id:'cowrite', dur:14, shape:'cowrite', acc:'one', chapter:1, cam:[{z:1.0,x:0,y:0},{z:1.08,x:0,y:0}],
+      lines:[{ at:1.2, head:'它会补全', sub:'你写了一半，它接着写完——而且比你的开头更笃定' }]},
+    { id:'rebut', dur:14, shape:'rebut', acc:'one', chapter:1, cam:[{z:1.0,x:0,y:0},{z:1.06,x:0,y:0}],
+      lines:[{ at:1.2, head:'它会反驳', sub:'第七版你说"这就行了"，它说：不是这个原因' }]},
+    { id:'remember', dur:14, shape:'remember', acc:'one', chapter:1, cam:[{z:1.02,x:0,y:0},{z:.96,x:0,y:0}],
+      lines:[{ at:1.2, head:'它会记得', sub:'上次你说"别给我选项"，这次它没给' }]},
+    { id:'boundary', dur:14, shape:'boundary', acc:'one', chapter:1, cam:[{z:1.0,x:0,y:0},{z:1.04,x:0,y:0}],
+      lines:[{ at:1.2, head:'它有边界', sub:'该由你决定的那一句，它留给了你' }]},
+
+    { id:'relay', dur:14, shape:'relay', acc:'two', chapter:2, cam:[{z:1.05,x:0,y:0},{z:.98,x:0,y:0}],
+      lines:[{ at:1.2, kicker:'二 · AI 与 AI', head:'一个查天气，一个查日程', sub:'第三个把它们合成一句话给你' }]},
+    { id:'debate', dur:14, shape:'debate', acc:'two', chapter:2, cam:[{z:1.0,x:0,y:0},{z:1.08,x:0,y:0}],
+      lines:[{ at:1.2, head:'两个模型对着干', sub:'一个说可行，另一个找出它错在哪' }]},
+    { id:'sharedmem', dur:14, shape:'sharedmem', acc:'two', chapter:2, cam:[{z:1.06,x:0,y:0},{z:.98,x:0,y:0}],
+      lines:[{ at:1.2, head:'一个存下，另一个取用', sub:'中间不需要你来翻译' }]},
+    { id:'blackbox', dur:14, shape:'blackbox', acc:'two', chapter:2, cam:[{z:1.0,x:0,y:0},{z:1.1,x:0,y:0}],
+      lines:[{ at:1.2, head:'你只说了一句话', sub:'后面发生了一整串你看不见的事' }]},
+    { id:'newcap', dur:14, shape:'newcap', acc:'two', chapter:2, cam:[{z:1.0,x:0,y:0},{z:.94,x:0,y:0}],
+      lines:[{ at:1.2, head:'今天它们能做的事', sub:'去年还不存在' }]},
+
+    { id:'firstword', dur:14, shape:'firstword', acc:'three', chapter:3, cam:[{z:1.04,x:0,y:0},{z:1.0,x:0,y:0}],
+      lines:[{ at:1.2, kicker:'三 · 人与人', head:'陌生人只说了一句', sub:'"你的图很好看"——然后你们聊了两小时' }]},
+    { id:'thread', dur:14, shape:'thread', acc:'three', chapter:3, cam:[{z:1.0,x:0,y:0},{z:1.08,x:0,y:0}],
+      lines:[{ at:1.2, head:'群里有人问了一句', sub:'沉默了很久，然后七个人都回了' }]},
+    { id:'together', dur:14, shape:'together', acc:'three', chapter:3, cam:[{z:1.06,x:0,y:0},{z:.96,x:0,y:0}],
+      lines:[{ at:1.2, head:'凌晨三点，四个人', sub:'为同一个问题，谁都不肯先睡' }]},
+    { id:'stranger', dur:14, shape:'stranger', acc:'three', chapter:3, cam:[{z:1.0,x:0,y:0},{z:1.05,x:0,y:0}],
+      lines:[{ at:1.2, head:'你帮过一个陌生人', sub:'他不会告诉你他是谁，也不会再出现' }]},
+    { id:'warmth', dur:14, shape:'warmth', acc:'three', chapter:3, cam:[{z:1.0,x:0,y:0},{z:1.06,x:0,y:0}],
+      lines:[{ at:1.2, head:'连接建立得慢', sub:'但一旦连上，就很难被切断' }]},
+
+    { id:'emerge', dur:20, shape:'emerge', acc:'all', chapter:4, cam:[{z:1.0,x:0,y:0},{z:.9,x:0,y:0}],
+      lines:[{ at:1.5, kicker:'万物', head:'犹如三生万物', sub:'三种连接同时发生，新的东西会自己长出来' }]},
+    { id:'notmade', dur:20, shape:'notmade', acc:'all', chapter:4, cam:[{z:.94,x:0,y:0},{z:1.0,x:0,y:0}],
+      lines:[{ at:1.5, head:'它不是被造出来的', sub:'它只需要被连接' }]},
+
+    { id:'join', dur:30, shape:'gate', acc:'join', chapter:5, cam:[{z:1.0,x:0,y:0},{z:1.12,x:0,y:-20}],
+      lines:[{ at:2, out:16, kicker:'加入我们', head:'让你的回声，被更多节点听见',
+               sub:'这里有正在造 AI 的人，有正在和人机协作的团队，也有一群自己就会互相连接的智能体。' }]}
   ];
-  const TOTAL = 300;
 
-  /* ---------------- 场景查询 ---------------- */
-  function sceneAt(t) {
-    for (let k = SCENES.length - 1; k >= 0; k--) if (t >= SCENES[k].t) return SCENES[k];
-    return SCENES[0];
+  // 时间轴：每个分镜的起止
+  let acc = 0;
+  SHOTS.forEach((s, i) => { s.t = acc; s.end = acc + s.dur; acc = s.dur + acc; s.index = i; });
+  const TOTAL = acc;
+  function shotAt(t) {
+    for (let k = SHOTS.length - 1; k >= 0; k--) if (t >= SHOTS[k].t) return SHOTS[k];
+    return SHOTS[0];
   }
 
-  /* ---------------- 位置 ---------------- */
+  /* ---------------- 位置：分镜内的时间 ---------------- */
+  const STAGE_X = 330;          // 形态整体右移，把左半屏留给文案
   function posOf(i, t) {
-    const sc = sceneAt(t);
+    const sc = shotAt(t);
     const local = t - sc.t;
-    const varDur = sc.dur / sc.vars;
-    let v = Math.min(sc.vars - 1, Math.floor(local / varDur));
-    const vt = local - v * varDur;
-    const BLEND = 1.8;
-    if (v > 0 && vt < BLEND) {
-      const b = smooth(vt / BLEND);
-      const prev = SH[sc.shape][v - 1](i, varDur);
-      const cur = SH[sc.shape][v](i, vt);
-      return [mix(prev[0], cur[0], b), mix(prev[1], cur[1], b)];
-    }
-    const p = SH[sc.shape][v](i, vt);
+    const p = SH[sc.shape](i, local);
+    const off = sc.id === 'join' ? 0 : STAGE_X;
     // 整场呼吸 + 双向行波 + 每颗粒子自己的轨道
-    // 5 分钟尺度上这是关键：形态会"停住"，但场必须一直活着
     const k = 1 + Math.sin(t * .23) * .07;
-    const wy = Math.sin(t * 1.15 + p[1] * .006) * 18;
-    const wx = Math.cos(t * .87 + p[0] * .005) * 14;
+    const wy = Math.sin(t * 1.9 + p[1] * .006) * 30;
+    const wx = Math.cos(t * 1.5 + p[0] * .005) * 24;
     const ph = pz[i] * TAU;
-    const orb = 5 + pz[i] * 11;
-    const ox = Math.cos(ph + t * (.5 + pu[i] * .9)) * orb;
-    const oy = Math.sin(ph * 1.3 + t * (.45 + pv[i] * .8)) * orb;
-    return [p[0] * k + wx + ox, p[1] * k + wy + oy];
+    const orb = 14 + pz[i] * 34;
+    const ox = Math.cos(ph + t * (1.0 + pu[i] * 1.8)) * orb;
+    const oy = Math.sin(ph * 1.3 + t * (.9 + pv[i] * 1.6)) * orb;
+    const d = drift(i, t, 11, .8);            // 粒子级游移：形态不动的时候场也在动
+    // 高频微抖：幅度只有几像素（形态不糊），但每帧都在变 —— 长片防"死时间"的关键
+    const jx = Math.sin(t * 18.7 + ph * 3.1) * 5.5;
+    const jy = Math.cos(t * 16.3 + ph * 2.3) * 5.5;
+    return [p[0] * k + wx + ox + d[0] + jx + off, p[1] * k + wy + oy + d[1] + jy];
   }
 
-  /* ---------------- 相机 ---------------- */
   function camAt(t) {
-    const sc = sceneAt(t);
-    const keys = sc.cam;
-    let i = 0;
-    while (i < keys.length - 1 && t >= keys[i + 1].t) i++;
-    const a = keys[i], b = keys[Math.min(keys.length - 1, i + 1)];
-    const f = b.t > a.t ? smooth((t - a.t) / (b.t - a.t)) : 0;
-    return [mix(a.zoom, b.zoom, f), mix(a.x, b.x, f), mix(a.y, b.y, f)];
+    const sc = shotAt(t);
+    const a = sc.cam[0], b = sc.cam[1];
+    const f = smooth((t - sc.t) / Math.max(.001, sc.dur));
+    return [mix(a.z, b.z, f), mix(a.x, b.x, f), mix(a.y, b.y, f)];
   }
 
   /* ==========================================================
@@ -482,7 +510,7 @@ V:VLN inst=violins role=melody gain=0.7
 
   function draw(t) {
     const [zoom, camX, camY] = camAt(t);
-    const sc = sceneAt(t);
+    const sc = shotAt(t);
     const acc = ACCENT[sc.acc];
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
@@ -552,18 +580,18 @@ V:VLN inst=violins role=melody gain=0.7
   }
 
   /* ==========================================================
-     文字：每个文案一个块（无回调，避免 history-dependent）
+     文字：每个文案一个块
      ========================================================== */
   const esc = c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c] || c;
   const linesHost = document.getElementById('lines');
   const blocks = [];
 
-  SCENES.forEach(sc => sc.lines.forEach((ln, i) => {
+  SHOTS.forEach(sc => sc.lines.forEach((ln, i) => {
     const center = sc.id === 'join';
     const el = document.createElement('div');
     el.className = 'ln-anchor' + (center ? ' ln-anchor--center' : '');
     el.setAttribute('data-layout-allow-occlusion', '');
-    el.setAttribute('data-om-id', 'ln-' + sc.id + '-' + i);
+    el.setAttribute('data-om-id', 'ln-' + sc.id);
     const kick = ln.kicker ? `<div class="ln__kick"><i></i><span>${esc(ln.kicker)}</span></div>` : '';
     const head = [...ln.head].map(c => (c === ' ' || c === '\n') ? c
       : `<span class="mask"><span class="ch">${esc(c)}</span></span>`).join('');
@@ -571,7 +599,7 @@ V:VLN inst=violins role=melody gain=0.7
     el.innerHTML = `<div class="ln">${kick}<h2 class="ln__head">${head}</h2>${sub}</div>`;
     linesHost.appendChild(el);
     blocks.push({
-      scene: sc, line: ln, el,
+      shot: sc, line: ln, el,
       inner: el.querySelector('.ln'),
       chars: el.querySelectorAll('.ch'),
       kick: el.querySelector('.ln__kick'),
@@ -584,35 +612,60 @@ V:VLN inst=violins role=melody gain=0.7
      ========================================================== */
   const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
   const huds = [...document.querySelectorAll('.hud__ch')];
-  const prog = document.getElementById('hudProg');
+  const shotEl = document.getElementById('hudShot');
+  const flashEl = document.getElementById('flash');
 
   gsap.set(blocks.map(b => b.inner), { opacity: 0 });
   gsap.set(blocks.map(b => b.chars), { yPercent: 140 });
   gsap.set(huds, { opacity: 0 });
+  gsap.set(flashEl, { opacity: 0 });
 
-  SCENES.forEach((sc, si) => {
+  // 章节标签：乐谱的 !mark:hook! / !mark:one! … 落在这些标签上
+  const CHAPTER_MARK = { 0: 'hook', 1: 'one', 2: 'two', 3: 'three', 4: 'all', 5: 'join' };
+  SHOTS.forEach(sc => {
     tl.addLabel('scene:' + sc.id, sc.t);
-    tl.fromTo(huds[si], { opacity: 0 }, { opacity: 1, duration: .6 }, sc.t);
-    if (si > 0) tl.to(huds[si - 1], { opacity: 0, duration: .5 }, sc.t);
+    if (sc.index === 0 || sc.chapter !== SHOTS[sc.index - 1].chapter) {
+      tl.addLabel(CHAPTER_MARK[sc.chapter], sc.t);
+    }
+    if (sc.index > 0) {
+      // 分镜切换：一次白闪 + 音��，画面硬切
+      tl.fromTo(flashEl, { opacity: 0 }, { opacity: .28, duration: .07, ease: 'power2.out', immediateRender: false }, sc.t - .04)
+        .to(flashEl, { opacity: 0, duration: .34, ease: 'power2.in' }, sc.t + .03);
+      OM.sfx(sc.index % 3 === 0 ? 'whoosh' : (sc.index % 3 === 1 ? 'hit' : 'glitch'), sc.t, { gain: .5, dur: .45 });
+    }
+  });
 
-    sc.lines.forEach((ln, li) => {
-      const b = blocks.find(x => x.scene === sc && x.line === ln);
-      const at = sc.t + ln.at;
-      const out = at + ln.dur;
-      tl.fromTo(b.inner, { opacity: 0, x: -34 }, { opacity: 1, x: 0, duration: .5, immediateRender: false }, at);
-      if (b.kick) tl.fromTo(b.kick, { opacity: 0, x: -18 }, { opacity: 1, x: 0, duration: .5, immediateRender: false }, at);
-      tl.fromTo(b.chars, { yPercent: 140 }, { yPercent: 0, duration: .85, stagger: .026, ease: 'expo.out', immediateRender: false }, at + .12);
-      if (b.sub) tl.fromTo(b.sub, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .7, immediateRender: false }, at + .55);
-      tl.to(b.inner, { opacity: 0, duration: .55 }, out);
-      if (b.kick) tl.to(b.kick, { opacity: 0, duration: .4 }, out);
-      tl.to(b.chars, { yPercent: -140, duration: .6, stagger: .018, ease: 'power2.in' }, out);
-      if (b.sub) tl.to(b.sub, { opacity: 0, duration: .4 }, out);
-      // 主音效落在"字全部就位"的那一帧
-      const land = at + .12 + .85 + .026 * Math.max(0, (ln.head || '').length - 1);
-      (ln.sfx || []).forEach((sfx, k) => OM.sfx(sfx, land + k * .13));
-      if (b.kick) OM.sfx('tick', at + .05, { gain: .25 });
-      if (b.sub) OM.sfx('pop', at + .62, { gain: .28, note: 3 });
-    });
+  blocks.forEach(b => {
+    const sc = b.shot, ln = b.line;
+    const at = sc.t + ln.at;
+    // 退场：既要留出呼吸，也不能压到下一行文案进场
+    const idx = sc.lines.indexOf(ln);
+    const next = sc.lines[idx + 1];
+    const out = Math.min(sc.end - 1.4, at + (sc.dur - ln.at) * .78,
+                         next ? sc.t + next.at - .6 : Infinity,
+                         ln.out != null ? sc.t + ln.out : Infinity);
+    tl.fromTo(b.inner, { opacity: 0, x: -34 }, { opacity: 1, x: 0, duration: .5, immediateRender: false }, at);
+    if (b.kick) tl.fromTo(b.kick, { opacity: 0, x: -18 }, { opacity: 1, x: 0, duration: .5, immediateRender: false }, at);
+    tl.fromTo(b.chars, { yPercent: 140 }, { yPercent: 0, duration: .85, stagger: .026, ease: 'expo.out', immediateRender: false }, at + .12);
+    if (b.sub) tl.fromTo(b.sub, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .7, immediateRender: false }, at + .55);
+    tl.to(b.inner, { opacity: 0, duration: .55 }, out);
+    if (b.kick) tl.to(b.kick, { opacity: 0, duration: .4 }, out);
+    tl.to(b.chars, { yPercent: -140, duration: .6, stagger: .018, ease: 'power2.in' }, out);
+    if (b.sub) tl.to(b.sub, { opacity: 0, duration: .4 }, out);
+    const land = at + .12 + .85 + .026 * Math.max(0, (ln.head || '').length - 1);
+    if (ln.kicker) OM.sfx('tick', at + .05, { gain: .25 });
+    OM.sfx('pop', land, { gain: .34, note: 3 });
+  });
+
+  /* 章节指示器 */
+  const chapterStart = sc => sc.t;
+  SHOTS.forEach(sc => {
+    if (sc.index === 0) return;
+    const prev = SHOTS[sc.index - 1];
+    if (prev.chapter !== sc.chapter) {
+      tl.fromTo(huds[sc.chapter], { opacity: 0 }, { opacity: 1, duration: .5 }, sc.t);
+      tl.to(huds[prev.chapter], { opacity: 0, duration: .5 }, sc.t);
+    }
   });
 
   /* 尾卡 */
@@ -623,17 +676,35 @@ V:VLN inst=violins role=melody gain=0.7
   document.querySelector('.endcard__brand').textContent = V.brand;
   document.querySelector('.hud__tl').textContent = V.brand;
 
-  tl.fromTo(endcard, { opacity: 0 }, { opacity: 1, duration: .9 }, 286)
-    .fromTo('.endcard__mark', { opacity: 0, scale: .6, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0, duration: .9, ease: 'expo.out', immediateRender: false }, 286.1)
-    .fromTo('.endcard__brand', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .9, ease: 'expo.out', immediateRender: false }, 286.3)
-    .fromTo('.endcard__cta', { opacity: 0, y: 18, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .7, ease: 'expo.out', immediateRender: false }, 287)
-    .fromTo('.endcard__url', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .7, immediateRender: false }, 287.2)
-    .fromTo('.endcard__brand', { letterSpacing: '.06em' }, { letterSpacing: '.2em', duration: 1.2, ease: 'expo.out' }, 288)
+  const joinShot = SHOTS[SHOTS.length - 1];
+  tl.fromTo(endcard, { opacity: 0 }, { opacity: 1, duration: 1.1 }, joinShot.end - 11)
+    .fromTo('.endcard__mark', { opacity: 0, scale: .6, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0, duration: .9, ease: 'expo.out', immediateRender: false }, joinShot.end - 10.9)
+    .fromTo('.endcard__brand', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .9, ease: 'expo.out', immediateRender: false }, joinShot.end - 10.7)
+    .fromTo('.endcard__cta', { opacity: 0, y: 18, scale: .96 }, { opacity: 1, y: 0, scale: 1, duration: .7, ease: 'expo.out', immediateRender: false }, joinShot.end - 10)
+    .fromTo('.endcard__url', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .7, immediateRender: false }, joinShot.end - 9.8)
+    .fromTo('.endcard__brand', { letterSpacing: '.06em' }, { letterSpacing: '.2em', duration: 1.2, ease: 'expo.out' }, joinShot.end - 9)
     .to({}, { duration: V.endHold });
 
-  /* 进度条随时间走（纯函数） */
+  OM.sfx('stamp', joinShot.end - 9, { gain: .7 });
+  OM.sfx('ding', joinShot.end - 8.9, { gain: .4, note: 5 });
+
   OM.clock(tl, draw, TOTAL);
-  const oldDraw = draw;
+
+  /* 分镜计数器（HUD 右上）：用 timeline 的 onUpdate 更新（纯时间函数） */
+  let lastShot = -1;
+  const counter = { v: 0 };
+  tl.to(counter, {
+    v: 1, duration: TOTAL, ease: 'none',
+    onUpdate: () => {
+      const s = shotAt(counter.v * TOTAL);
+      if (s.index !== lastShot) {
+        lastShot = s.index;
+        shotEl.textContent = pad2(s.index + 1) + ' / ' + pad2(SHOTS.length);
+      }
+    }
+  }, 0);
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
 
   window.__timelines['film5'] = tl;
 })();
