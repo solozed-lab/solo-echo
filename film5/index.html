@@ -34,13 +34,13 @@
   }
   #field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-  /* 左侧渐变遮罩：与站点 .sw-copylayer::before 同一套参数
+  /* 渐变遮罩：与站点 .sw-copylayer::before 同一套参数，随卡片左右翻转
      —— 背后的网络依然活着，只是被压暗；文字永远压得住底 */
-  .scrim {
-    position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(90deg,
-      rgba(5,7,15,.94) 0%, rgba(5,7,15,.82) 30%, rgba(5,7,15,.42) 60%, transparent 100%);
-  }
+  .scrim { position: absolute; inset: 0; pointer-events: none; }
+  .scrim--l { background: linear-gradient(90deg,
+      rgba(5,7,15,.94) 0%, rgba(5,7,15,.82) 30%, rgba(5,7,15,.42) 60%, transparent 100%); }
+  .scrim--r { background: linear-gradient(270deg,
+      rgba(5,7,15,.94) 0%, rgba(5,7,15,.82) 30%, rgba(5,7,15,.42) 60%, transparent 100%); opacity: 0; }
   .grain {
     position: absolute; inset: 0; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
     background-image: radial-gradient(rgba(255,255,255,.09) .5px, transparent .5px); background-size: 3px 3px;
@@ -64,7 +64,7 @@
      从中间向两侧画出 + 面板晚于压暗一点点出现（错峰）
      ========================================================== */
   .co {
-    position: absolute; left: 88px; top: 50%; width: 620px;
+    position: absolute; top: 50%; width: 620px;
     padding: 30px 34px 32px; border-radius: 4px;
     background: linear-gradient(180deg, rgba(8,12,22,.62), rgba(5,8,16,.70));
     border: 1px solid rgba(234,246,255,.10);
@@ -77,6 +77,10 @@
     background: radial-gradient(54% 58% at 30% 48%, var(--glow), transparent 74%);
     opacity: .8;
   }
+  .co--l { left: 88px; }
+  .co--r { left: auto; right: 88px; }
+  /* 框外柔光的方向也跟着换边 */
+  .co--r::after { background: radial-gradient(54% 58% at 70% 48%, var(--glow), transparent 74%); }
   .co__bar {
     position: absolute; top: 0; left: 24px; right: 24px; height: 2px; border-radius: 2px;
     background: linear-gradient(90deg, var(--c1), var(--c2) 52%, var(--c3));
@@ -87,10 +91,12 @@
   .co__num { font-family: "Roboto Condensed", "Inter", monospace; font-size: 17px; letter-spacing: .2em; color: rgba(157,179,205,.68); }
   .co__title {
     margin: 0; font-size: 50px; line-height: 1.26; font-weight: 900; letter-spacing: -.015em;
+    white-space: pre-line;   /* 标题里手写的换行要保留 */
     text-shadow: 0 2px 34px rgba(0,0,0,.85), 0 0 60px var(--glow);
   }
   .co__body {
     margin: 20px 0 0; font-size: 25px; line-height: 1.66; color: rgba(234,246,255,.72);
+    white-space: pre-line;
     text-shadow: 0 1px 18px rgba(0,0,0,.9);
   }
 
@@ -113,7 +119,7 @@
     box-shadow: 0 0 64px rgba(77,227,255,.4);
   }
   .endcard__brand { font-family: "Inter", sans-serif; font-weight: 800; font-size: 82px; letter-spacing: .1em; line-height: 1; }
-  .endcard__body { margin: 26px 0 0; font-size: 25px; line-height: 1.7; color: var(--muted); }
+  .endcard__body { margin: 26px 0 0; font-size: 25px; line-height: 1.7; color: var(--muted); white-space: pre-line; }
   .endcard__row { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 38px; }
   .endcard__cta {
     font-size: 30px; font-weight: 500; color: #04070e; padding: 14px 44px; border-radius: 999px;
@@ -127,7 +133,8 @@
 <div id="film" data-composition-id="film5" data-width="1920" data-height="1080">
   <audio id="om-sound" src="assets/sound.wav" data-start="0" data-duration="340" data-track-index="8" data-volume="1"></audio>
   <canvas id="field" width="1920" height="1080"></canvas>
-  <div class="scrim"></div>
+  <div class="scrim scrim--l" id="scrimL"></div>
+  <div class="scrim scrim--r" id="scrimR"></div>
   <div class="grain"></div>
 
   <div class="hud" data-layout-allow-occlusion aria-hidden="true">
@@ -710,7 +717,7 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
       cam:[{z:1.34,x:0,y:0},{z:1.0,x:0,y:0}] },
 
     { id:'ask', base:'bipolar', dur:16, shape:'ask', ch:1, card:{ eyebrow:'一 · 人与 AI', title:'它先反问',
-        body:'你说"帮我写个方案"，它没动笔——先问：写给谁看？' }, cam:[{z:1.06,x:0,y:0},{z:1.0,x:0,y:0}] },
+        body:'你说"帮我写个方案"，它没动笔——\n先问：写给谁看？' }, cam:[{z:1.06,x:0,y:0},{z:1.0,x:0,y:0}] },
     { id:'cowrite', base:'lattice', dur:16, shape:'cowrite', ch:1, card:{ eyebrow:'一 · 人与 AI', title:'它把话接下去',
         body:'你写了三行卡住，它接着写完；比你开头那句还笃定。' }, cam:[{z:1.02,x:0,y:0},{z:1.08,x:0,y:0}] },
     { id:'rebut', base:'bipolar', dur:16, shape:'rebut', ch:1, card:{ eyebrow:'一 · 人与 AI', title:'它敢不同意你',
@@ -721,22 +728,22 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
         body:'该你决定的那一句，它没替你写。' }, cam:[{z:1.0,x:0,y:0},{z:1.04,x:0,y:0}] },
 
     { id:'relay', base:'lattice', dur:16, shape:'relay', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'它们自己会串起来',
-        body:'一个查天气，一个查日程，第三个把它们缝成一句话。' }, cam:[{z:1.05,x:0,y:0},{z:.99,x:0,y:0}] },
-    { id:'debate', base:'bipolar', dur:16, shape:'debate', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'一个说可行，另一个找出它错在哪',
+        body:'一个查天气，一个查日程，\n第三个把它们缝成一句话。' }, cam:[{z:1.05,x:0,y:0},{z:.99,x:0,y:0}] },
+    { id:'debate', base:'bipolar', dur:16, shape:'debate', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'一个说可行，\n另一个找出它错在哪',
         body:'它们不需要你来做裁判。' }, cam:[{z:1.0,x:0,y:0},{z:1.07,x:0,y:0}] },
     { id:'sharedmem', base:'bipolar', dur:16, shape:'sharedmem', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'一个存下，另一个取用',
         body:'中间不需要你来翻译。' }, cam:[{z:1.06,x:0,y:0},{z:.98,x:0,y:0}] },
     { id:'blackbox', base:'lattice', dur:16, shape:'blackbox', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'你只说了一句话',
         body:'后面发生了一整串你看不见的事。' }, cam:[{z:1.0,x:0,y:0},{z:1.09,x:0,y:0}] },
-    { id:'newcap', base:'sphere', dur:16, shape:'newcap', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'今天的它们，多会了一件事',
+    { id:'newcap', base:'sphere', dur:16, shape:'newcap', ch:2, card:{ eyebrow:'二 · AI 与 AI', title:'今天的它们，\n多会了一件事',
         body:'去年还不存在。' }, cam:[{z:1.0,x:0,y:0},{z:.95,x:0,y:0}] },
 
-    { id:'firstword', base:'bipolar', dur:16, shape:'firstword', ch:3, card:{ eyebrow:'三 · 人与人', title:'先开口的人，决定了后面的一切',
+    { id:'firstword', base:'bipolar', dur:16, shape:'firstword', ch:3, card:{ eyebrow:'三 · 人与人', title:'先开口的人，\n决定了后面的一切',
         body:'"你的图很好看"——然后你们聊了两小时。' }, cam:[{z:1.04,x:0,y:0},{z:1.0,x:0,y:0}] },
     { id:'thread', base:'lattice', dur:16, shape:'thread', ch:3, card:{ eyebrow:'三 · 人与人', title:'一句话可以引来一串人',
-        body:'群里有人问了一句，沉默了很久，然后七个人都回了。' }, cam:[{z:1.0,x:0,y:0},{z:1.07,x:0,y:0}] },
+        body:'群里有人问了一句，沉默了很久，\n然后七个人都回了。' }, cam:[{z:1.0,x:0,y:0},{z:1.07,x:0,y:0}] },
     { id:'together', base:'cluster', dur:16, shape:'together', ch:3, card:{ eyebrow:'三 · 人与人', title:'有些事，只在深夜发生',
-        body:'凌晨三点，四个人为同一个问题，谁都不肯先睡。' }, cam:[{z:1.05,x:0,y:0},{z:.97,x:0,y:0}] },
+        body:'凌晨三点，四个人为同一个问题，\n谁都不肯先睡。' }, cam:[{z:1.05,x:0,y:0},{z:.97,x:0,y:0}] },
     { id:'stranger', base:'bipolar', dur:16, shape:'stranger', ch:3, card:{ eyebrow:'三 · 人与人', title:'你帮过一个陌生人',
         body:'他不会告诉你他是谁，也不会再出现。' }, cam:[{z:1.0,x:0,y:0},{z:1.05,x:0,y:0}] },
     { id:'warmth', base:'cluster', dur:16, shape:'warmth', ch:3, card:{ eyebrow:'三 · 人与人', title:'连接建立得很慢',
@@ -744,16 +751,21 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
 
     { id:'emerge', base:'shell', dur:20, shape:'emerge', ch:4, card:{ eyebrow:'犹如三生万物', title:'犹如三生万物',
         body:'三种关系同时发生，新的东西自己长出来。' }, cam:[{z:1.0,x:0,y:0},{z:.92,x:0,y:0}] },
-    { id:'notmade', base:'sphere', dur:20, shape:'notmade', ch:4, card:{ eyebrow:'犹如三生万物', title:'万物不是被造出来的，是被关系带出来的',
+    { id:'notmade', base:'sphere', dur:20, shape:'notmade', ch:4, card:{ eyebrow:'犹如三生万物', title:'万物不是被造出来的，\n是被关系带出来的',
         body:'它只需要被连接。' }, cam:[{z:.95,x:0,y:0},{z:1.0,x:0,y:0}] },
 
-    { id:'join', base:'gate', dur:30, shape:'join', ch:5, card:{ eyebrow:'加入我们', title:'让你的回声，被更多节点听见',
+    { id:'join', base:'gate', dur:30, shape:'join', ch:5, card:{ eyebrow:'加入我们', title:'让你的回声，\n被更多节点听见',
         body:'进来，把你的节点接上。' },
       cam:[{z:1.0,x:0,y:0},{z:1.08,x:0,y:0}] }
   ];
 
+  // 左右切屏：全局奇偶交替（永远不会连续两张卡在同一侧）
+  // 卡片在左 → 形态让到右侧；卡片在右 → 形态让到左侧
   let acc = 0;
-  SHOTS.forEach((s, i) => { s.t = acc; s.end = acc + s.dur; acc += s.dur; s.index = i; });
+  SHOTS.forEach((s, i) => {
+    s.t = acc; s.end = acc + s.dur; acc += s.dur; s.index = i;
+    s.side = i % 2 === 0 ? 'l' : 'r';
+  });
   const TOTAL = acc;
   function shotAt(t) {
     for (let k = SHOTS.length - 1; k >= 0; k--) if (t >= SHOTS[k].t) return SHOTS[k];
@@ -780,6 +792,7 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
 
   const cur = [0,0], prev = [0,0], tmpA = [0,0], tmpB = [0,0];
   const MORPH = 0.95;                      // 分镜之间的形态接力时长
+  const CAM_SHIFT = 150;                    // 形态为了给文案让位而横移的像素
   const flowT = t => t * 0.115;
 
   function draw(t) {
@@ -801,10 +814,13 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
     const flowAmp = mix(chA.flow, chB.flow, chM);
     const energy = mix(chA.energy, chB.energy, chM);
 
-    // 镜头
+    // 镜头：缩放按分镜全程缓推；横向偏移则在转场窗口内换向（形态让到卡片的对面）
     const ca = sc.cam[0], cb = sc.cam[1];
     const f = smooth(clamp01(local / Math.max(.001, sc.dur)));
-    let zoom = mix(ca.z, cb.z, f), camX = mix(ca.x, cb.x, f), camY = mix(ca.y, cb.y, f);
+    let zoom = mix(ca.z, cb.z, f), camY = mix(ca.y, cb.y, f);
+    const shiftNow = sc.side === 'l' ? -CAM_SHIFT : CAM_SHIFT;
+    const shiftPrev = prevSc.side === 'l' ? -CAM_SHIFT : CAM_SHIFT;
+    const camX = mix(shiftPrev, shiftNow, m);
     // 转场时的一次"呼吸"：先退 2.5%，再进 2%
     if (sc.index > 0 && local < MORPH) {
       const b = Math.sin(clamp01(local / MORPH) * Math.PI);
@@ -958,7 +974,7 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
   SHOTS.forEach(sc => {
     if (!sc.card) return;
     const el = document.createElement('div');
-    el.className = 'co';
+    el.className = 'co co--' + sc.side;
     el.setAttribute('data-layout-allow-occlusion', '');
     el.setAttribute('data-om-id', 'co-' + sc.id);
     el.style.setProperty('--c1', CHAPTERS[sc.ch].pal[0]);
@@ -988,11 +1004,15 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
   const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
   const huds = [...document.querySelectorAll('.hud__ch')];
   const shotEl = document.getElementById('hudShot');
+  const scrimL = document.getElementById('scrimL');
+  const scrimR = document.getElementById('scrimR');
 
-  gsap.set(cards.map(c => c.el), { opacity: 0, y: 26, scale: .975 });
-  gsap.set(cards.map(c => c.bar), { scaleX: .28, opacity: 0 });
-  gsap.set(cards.map(c => c.title), { opacity: 0, y: 18 });
-  gsap.set(cards.map(c => c.body), { opacity: 0, y: 14 });
+  cards.forEach(c => {
+    gsap.set(c.el, { opacity: 0, y: 22, x: c.shot.side === 'l' ? -48 : 48, scale: .975 });
+    gsap.set(c.bar, { scaleX: .28, opacity: 0 });
+    gsap.set(c.title, { opacity: 0, y: 18 });
+    gsap.set(c.body, { opacity: 0, y: 14 });
+  });
   gsap.set(huds, { opacity: 0 });
 
   const CHAPTER_MARK = { 0:'hook', 1:'one', 2:'two', 3:'three', 4:'all', 5:'join' };
@@ -1003,8 +1023,12 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
       tl.addLabel(CHAPTER_MARK[sc.ch], sc.t);
     }
     if (sc.index > 0) {
-      // 转场：形态接力（渲染层内做）+ 扩散波环（渲染层内做）+ 章节切换才有的重音
+      // 转场：形态接力（渲染层内做）+ 扩散波环（渲染层内做）+ 遮罩换向 + 章节切换才有的重音
       const chapterCut = sc.ch !== SHOTS[sc.index - 1].ch;
+      const toL = sc.side === 'l' ? scrimL : scrimR;
+      const toR = sc.side === 'l' ? scrimR : scrimL;
+      tl.to(toR, { opacity: 0, duration: .72, ease: 'power2.inOut' }, sc.t - .18);
+      tl.to(toL, { opacity: 1, duration: .72, ease: 'power2.inOut' }, sc.t - .18);
       if (chapterCut) {
         OM.sfx('whoosh', sc.t - .12, { gain: .30, dur: .7 });
         OM.sfx('subdrop', sc.t + .16, { gain: .32 });
@@ -1015,17 +1039,20 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
   // 呼出框：整块入场 + 层次错峰（不逐字）
   cards.forEach(c => {
     const sc = c.shot;
-    const at = sc.t + 2.4;
-    const out = sc.id === 'join' ? sc.t + 13 : sc.end - 2.6;   // join 文案在尾卡出现前就走
-    tl.fromTo(c.el, { opacity: 0, y: 26, scale: .975 },
-      { opacity: 1, y: 0, scale: 1, duration: .62, ease: 'expo.out', immediateRender: false }, at);
+    // 跟着转场走：先换画面（0.95s 形态接力），文案退场贴着切点、新文案贴着接力结束落下
+    const at = sc.t + 1.25;
+    const out = sc.id === 'join' ? sc.t + 13 : sc.end - 0.6;
+    const fromX = sc.side === 'l' ? -48 : 48;               // 从对侧滑入
+    const toX = sc.side === 'l' ? -38 : 38;                 // 退场继续往对侧走
+    tl.fromTo(c.el, { opacity: 0, y: 22, x: fromX, scale: .975 },
+      { opacity: 1, y: 0, x: 0, scale: 1, duration: .68, ease: 'expo.out', immediateRender: false }, at);
     tl.fromTo(c.bar, { scaleX: .28, opacity: 0 },
       { scaleX: 1, opacity: .9, duration: .72, ease: 'expo.out', immediateRender: false }, at + .12);
     tl.fromTo(c.title, { opacity: 0, y: 18 },
       { opacity: 1, y: 0, duration: .70, ease: 'expo.out', immediateRender: false }, at + .18);
     tl.fromTo(c.body, { opacity: 0, y: 14 },
       { opacity: 1, y: 0, duration: .78, ease: 'expo.out', immediateRender: false }, at + .30);
-    tl.to(c.el, { opacity: 0, y: -16, filter: 'blur(3px)', duration: .45, ease: 'power2.in' }, out);
+    tl.to(c.el, { opacity: 0, y: -14, x: toX, filter: 'blur(3px)', duration: .45, ease: 'power2.in' }, out);
     OM.sfx('pop', at + .05, { gain: .26 });
     // 意义的落点：给三处关键句一记低频
     if (sc.id === 'together' || sc.id === 'thread' || sc.id === 'rebut') OM.sfx('thud', at + .42, { gain: .26 });
@@ -1053,7 +1080,7 @@ Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z 
   const eurl = endcard.querySelector('.endcard__url');
   gsap.set(endcard, { opacity: 0 });
   ecta.textContent = V.cta; eurl.textContent = V.url; ebrand.textContent = V.brand;
-  ebody.textContent = '这里有正在造 AI 的人，有正在和人机协作的团队，也有一群自己就会互相连接的智能体。';
+  ebody.textContent = '这里有正在造 AI 的人，有正在和人机协作的团队，\n也有一群自己就会互相连接的智能体。';
   document.querySelector('.hud__tl').textContent = V.brand;
 
   const joinShot = SHOTS[SHOTS.length - 1];
