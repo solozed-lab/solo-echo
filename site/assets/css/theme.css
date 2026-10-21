@@ -70,6 +70,101 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   backdrop-filter: blur(6px);
 }
 
+/* ============================================================================
+   可呼出的关键词
+   ----------------------------------------------------------------------------
+   页面讲的是"关系"，那就把关系本身做成可以碰的东西：
+     悬停 → 一道光带扫过这个词，粒子场的注意力同时被它拉走
+     点击 → 关系演示跑起来，这个词保持点亮
+   强调色取自当前章节的 --sw-accent（引擎每章都会改），
+   所以关键词天生带着本章的颜色。
+   ========================================================================== */
+.sw-key {
+  background-color: transparent;   /* <mark> 的浏览器默认黄底必须清掉 */
+}
+
+/* 正文里的关系词 */
+.sw-key:not(.sw-key--tag) {
+  position: relative;
+  padding: 0 .08em;
+  border-radius: 3px;
+  color: color-mix(in srgb, var(--sw-accent) 86%, #fff);
+  cursor: pointer;
+  background-image: linear-gradient(100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--sw-accent) 26%, transparent) 42%,
+    color-mix(in srgb, var(--sw-accent) 58%, transparent) 50%,
+    transparent 100%);
+  background-size: 260% 100%;
+  background-position: 120% 0;
+  background-repeat: no-repeat;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--sw-accent) 30%, transparent);
+  transition:
+    color .3s ease,
+    background-position .85s cubic-bezier(.22, .61, .36, 1),
+    text-shadow .3s ease;
+}
+
+.sw-key:not(.sw-key--tag)::after {
+  content: "";
+  position: absolute;
+  left: .08em; right: .08em; bottom: -.12em;
+  height: 1px;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--sw-accent) 78%, transparent), transparent);
+  opacity: .38;
+  transition: opacity .3s ease, box-shadow .3s ease;
+}
+
+.sw-key:not(.sw-key--tag):hover,
+.sw-key:not(.sw-key--tag):focus-visible {
+  color: #fff;
+  background-position: -20% 0;
+  text-shadow: 0 0 26px color-mix(in srgb, var(--sw-accent) 72%, transparent);
+}
+
+.sw-key:not(.sw-key--tag):hover::after,
+.sw-key:not(.sw-key--tag):focus-visible::after {
+  opacity: 1;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sw-accent) 85%, transparent);
+}
+
+/* 标签本身就是关键词（每章三个） */
+.sw-copy__tags li.sw-key {
+  cursor: pointer;
+  transition:
+    transform .28s cubic-bezier(.22, .61, .36, 1),
+    color .28s ease, background .28s ease,
+    border-color .28s ease, box-shadow .28s ease;
+}
+
+.sw-copy__tags li.sw-key:hover,
+.sw-copy__tags li.sw-key:focus-visible {
+  transform: translateY(-2px);
+  color: #fff;
+  background: color-mix(in srgb, var(--sw-accent) 26%, rgba(255, 255, 255, 0.06));
+  border-color: color-mix(in srgb, var(--sw-accent) 78%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--sw-accent) 34%, transparent);
+}
+
+/* 关系演示正在跑：同一个 key 的词保持点亮 */
+.sw-key:not(.sw-key--tag).is-demo {
+  color: #fff;
+  background-position: -20% 0;
+  text-shadow: 0 0 30px color-mix(in srgb, var(--sw-accent) 82%, transparent);
+}
+.sw-key:not(.sw-key--tag).is-demo::after {
+  opacity: 1;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sw-accent) 90%, transparent);
+}
+.sw-copy__tags li.sw-key.is-demo {
+  transform: translateY(-2px);
+  color: #fff;
+  background: color-mix(in srgb, var(--sw-accent) 30%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--sw-accent) 88%, transparent);
+  box-shadow: 0 10px 34px color-mix(in srgb, var(--sw-accent) 42%, transparent);
+}
+
 .sw-btn--primary {
   color: #04070e !important;
   background: linear-gradient(120deg, var(--sw-accent), color-mix(in srgb, var(--sw-accent) 55%, #fff)) !important;
@@ -111,7 +206,7 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
 .sw-hint { color: rgba(143, 166, 196, 0.75); }
 
 /* 视频层压暗，让实时粒子成为主角 */
-.sw-stage { opacity: 0.5; }
+.sw-stage { opacity: 0.42; }
 /* HUD 里可手动关掉视频层（省电/性能，或只看粒子） */
 .sw-novideo .sw-stage { opacity: 0 !important; }
 .sw-sky__grad {
@@ -420,7 +515,7 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
 
 /* ------------------------------------------------------ 移动端适配 */
 @media (max-width: 860px) {
-  .sw-stage { opacity: 0.42; }
+  .sw-stage { opacity: 0.36; }
   /* 移动端由插件改成底部定位，这里必须把桌面端的 top 复位
      （未分层样式优先级高于插件的 @layer sw） */
   .sw-copy { top: auto; }
@@ -459,6 +554,14 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   .sw-hud__dot { animation: none; }
   .sw-hint i::after { animation: none; }
   .sw-sky__grad { background: linear-gradient(180deg, #0a1224 0%, #05070f 100%); }
+  /* 关键词保留颜色与下划线（那是信息），只去掉扫光动画 */
+  .sw-key:not(.sw-key--tag) { background-image: none; }
+  .sw-key:not(.sw-key--tag):hover,
+  .sw-key:not(.sw-key--tag):focus-visible,
+  .sw-key:not(.sw-key--tag).is-demo { background-position: 50% 0; }
+  .sw-copy__tags li.sw-key:hover,
+  .sw-copy__tags li.sw-key:focus-visible,
+  .sw-copy__tags li.sw-key.is-demo { transform: none; }
 }
 
 /* 键盘可达性 */

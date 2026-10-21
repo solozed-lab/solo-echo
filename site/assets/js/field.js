@@ -82,7 +82,7 @@
   const CHAPTERS = [
     { id: 'start',   shape: 'sphere',   rScale: 0.46, kShape: 0.40, flow: 1.00, speed: 1.00, link: 132, linkAlpha: 0.50, size: 2.5, energy: 0.55,
       pal: ['#4de3ff', '#7f9dff', '#a06bff'] },
-    { id: 'human-ai', shape: 'bipolar',  rScale: 0.40, kShape: 0.55, flow: 0.80, speed: 1.10, link: 146, linkAlpha: 0.55, size: 2.4, energy: 0.70,
+    { id: 'human-ai', shape: 'bipolar',  rScale: 0.44, kShape: 0.55, flow: 0.80, speed: 1.10, link: 146, linkAlpha: 0.55, size: 2.4, energy: 0.70,
       pal: ['#4de3ff', '#a06bff', '#ff7bd5'] },
     { id: 'ai-ai',   shape: 'lattice',  rScale: 0.48, kShape: 0.60, flow: 0.55, speed: 1.05, link: 128, linkAlpha: 0.62, size: 2.5, energy: 0.80,
       pal: ['#a06bff', '#ff7bd5', '#7f9dff'] },
@@ -143,7 +143,7 @@
         vec2 p = (aPos / uRes) * 2.0 - 1.0;
         p.y = -p.y;
         gl_Position = vec4(p, 0.0, 1.0);
-        gl_PointSize = max(3.0, aAttr.x * uDpr);
+        gl_PointSize = max(3.4, aAttr.x * uDpr);
         vHue = aAttr.y; vAlpha = aAttr.z;
       }`;
 
@@ -347,6 +347,9 @@
     const pcharge = new Float32Array(MAX), pflash = new Float32Array(MAX);
     const swarmX = new Float32Array(MAX), swarmY = new Float32Array(MAX);
     const swarmT = new Float32Array(MAX);
+    const pwave = new Float32Array(MAX);   // 共振波在每个粒子上的瞬时相位值（画波前用）
+    const pecho = new Float32Array(MAX);   // 回声余辉（"记忆"演示：亮过的地方会慢慢褪）
+    const pairOf = new Int32Array(MAX);    // "信任"演示：被锁定的伙伴（-1 = 自由）
 
     let count = Math.round(MAX * (coarse ? 0.55 : 0.72));
     let density = 1;           // 用户可调 0.25 - 1
@@ -399,6 +402,48 @@
     const shocks = [];       // {x,y,r,life,maxR,strength}
     const longLinks = [];    // {a,b,life}
     const clusters = [];     // 人与人章节的星团中心
+
+    /* ==========================================================
+       共振波（resonance wave）
+       ----------------------------------------------------------
+       一个从「视点」向外扩散的行波，把整张网络变成一件会响的乐器。
+
+       相位 = 滚动相位 + 呼吸相位
+         · 滚动相位：与文档锁死 —— 向下滚 100px，波前正好外扩 100px。
+           所以"滚动的方向"直接变成"波的方向"，不是靠速度去抖亮度。
+         · 呼吸相位：自主正弦 —— 停手不动，波依然在收缩 / 舒张，
+           这就是用户要的「循环波动」。
+       振幅随滚动能量上升：滚得越快，波越猛；停下后回到轻微呼吸。
+       波心会缓慢漂向指针（悬停关键词时漂向那个词），
+       也就是「这个词把它周围的网络叫醒了」。 */
+    const wave = {
+      k: 0.0072,            // 空间频率 → 波长 ≈ 870px
+      cx: 0, cy: 0,         // 波心（像素）
+      scrollPhase: 0,       // 滚动相位
+      breathAmp: 2.0,       // 呼吸相位振幅（rad）
+      breathPeriod: 2.4,    // 呼吸周期（秒）≈ 5 拍 @120BPM（与宣传片同一速度）
+      energy: 0,           // 滚动能量 0..1（平滑）
+      vel: 0,              // 平滑后的滚动速度（px/帧）
+      amp: 0
+    };
+
+    /* 关键词热点：悬停某个词时，场把它周围收紧并点亮 */
+    const hotspot = { x: 0, y: 0, on: false, r: 175 };
+
+    /* 关键词演示：点击一个词 → 触发一段可看的"关系演示" */
+    const DEMO_DUR = {
+      memory: 6.5, judgment: 2.6, bounds: 5.5, bridge: 3.4,
+      handoff: 4.2, trust: 6.5, emergence: 3.2, companion: 6.5
+    };
+    const demo = {
+      mode: null, t: 0, dur: 0,
+      cx: 0, cy: 0,
+      scanX: 0,            // 审视扫描线位置
+      relayT: 0,           // 接力：下一次投递的时间
+      relayN: 0,           // 接力：已投递几棒
+      boundR: 0,           // 边界半径
+      talkSide: 0          // 双极对话：当前轮到哪一边
+    };
     let t = 0, lastT = 0;
     let nextEventAt = 3.5, lastEvent = '';
     let eventCount = 0;
@@ -420,10 +465,11 @@
           break;
         }
         case 'bipolar': {
+          // 左右两个极，各自是一团（不是一条弧）—— 中间留出"对话"的通道
           const side = k === KIND_AI ? -1 : k === KIND_Human ? 1 : (v < 0.5 ? -1 : 1);
           const a = u * TAU, rr = rad * (0.08 + 0.42 * Math.sqrt(v));
-          out[0] = cx + side * rad * 0.92 + Math.cos(a) * rr * 0.6;
-          out[1] = cy + Math.sin(a) * rr * 0.95;
+          out[0] = cx + side * rad * 0.86 + Math.cos(a) * rr * 1.25;
+          out[1] = cy + Math.sin(a) * rr * 1.05;
           break;
         }
         case 'lattice': {
@@ -586,6 +632,21 @@
       const gx = state.gravity.x * 0.9, gy = state.gravity.y * 0.9;
       const flowT = t * 0.055;
 
+      /* ---- 共振波：波心跟随指针 / 关键词热点，呼吸相位自主推进 ---- */
+      const wFocusX = hotspot.on ? hotspot.x : (pointer.active ? pointer.x : W * 0.5);
+      const wFocusY = hotspot.on ? hotspot.y : (pointer.active ? pointer.y : H * 0.46);
+      const wFollow = Math.min(1, dt * (hotspot.on ? 3.6 : 1.8));
+      wave.cx += (wFocusX - wave.cx) * wFollow;
+      wave.cy += (wFocusY - wave.cy) * wFollow;
+
+      const wPhase = wave.scrollPhase + wave.breathAmp * Math.sin((t / wave.breathPeriod) * TAU);
+      const wK = wave.k * (1 + wave.energy * 0.5);
+      const wAmp = (0.42 + wave.energy * 1.05) * (0.55 + params.energy * 0.55);
+      const wForce = 0.070 * wAmp;
+      wave.amp = wAmp;
+
+      applyDemo(dt);
+
       for (let i = 0; i < count; i++) {
         targetOf(A, i, tgtA, t);
         targetOf(B, i, tgtB, t);
@@ -644,6 +705,65 @@
           }
         }
 
+        // 共振波：沿半径推拉，粒子在波前两侧交替聚散
+        const wdx = px[i] - wave.cx, wdy = py[i] - wave.cy;
+        const wd = Math.sqrt(wdx * wdx + wdy * wdy);
+        const wv = Math.sin(wK * wd - wPhase);
+        pwave[i] = wv;
+        if (wd > 1) {
+          const inv = 1 / wd;
+          ax += wdx * inv * wv * wForce;
+          ay += wdy * inv * wv * wForce;
+        }
+
+        // 关键词热点：那个词把周围的节点轻轻收拢并点亮
+        if (hotspot.on) {
+          const hx = px[i] - hotspot.x, hy = py[i] - hotspot.y;
+          const hd = Math.sqrt(hx * hx + hy * hy);
+          if (hd < hotspot.r) {
+            const fall = 1 - hd / hotspot.r;
+            if (hd > 1) {
+              const inv = 1 / hd;
+              ax -= hx * inv * fall * 0.030;
+              ay -= hy * inv * fall * 0.030;
+            }
+            pflash[i] = Math.max(pflash[i], fall * 0.55);
+          }
+        }
+
+        /* ---- 关系演示：每个关键词对应一种可看的关系 ---- */
+        if (demo.mode === 'memory') {
+          const dx = px[i] - demo.cx, dy = py[i] - demo.cy;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 280) pecho[i] = Math.max(pecho[i], 1 - d / 280);
+        } else if (demo.mode === 'bounds') {
+          const dx = px[i] - demo.cx, dy = py[i] - demo.cy;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          const band = Math.abs(d - demo.boundR);
+          if (band < 95 && d > 1) {
+            const dir = d > demo.boundR ? 1 : -1;
+            const k = (1 - band / 95) * 0.11;
+            ax += (dx / d) * dir * k;
+            ay += (dy / d) * dir * k;
+          }
+        } else if (demo.mode === 'trust') {
+          const j = pairOf[i];
+          if (j >= 0) {
+            ax += (px[j] - px[i]) * 0.011;
+            ay += (py[j] - py[i]) * 0.011;
+          }
+        } else if (demo.mode === 'judgment') {
+          const dxs = px[i] - demo.scanX;
+          if (Math.abs(dxs) < 75) {
+            pflash[i] = 1;
+            ax += 0.055;
+          }
+        } else if (demo.mode === 'companion') {
+          // 双极对话：一方说完，另一方接上
+          const side = px[i] < W * 0.5 ? 0 : 1;
+          if (side === demo.talkSide) pflash[i] = Math.max(pflash[i], 0.5);
+        }
+
         vx[i] = (vx[i] + ax * f) * damp;
         vy[i] = (vy[i] + ay * f) * damp;
 
@@ -662,6 +782,7 @@
 
         pcharge[i] = Math.max(0, pcharge[i] - dt * 0.55);
         pflash[i] = Math.max(0, pflash[i] - dt * 2.2);
+        pecho[i] = Math.max(0, pecho[i] - dt * 0.17);   // 回声褪得很慢 —— 记忆不该立刻消失
       }
 
       // 冲击波推进：用真实时间推进，约 3 秒掠过全屏，人才看得清"扩散"
@@ -675,6 +796,114 @@
         longLinks[l].life -= dt * 0.4;
         if (longLinks[l].life <= 0) longLinks.splice(l, 1);
       }
+    }
+
+    /* --------------------------------------------------- 关系演示调度 */
+    function pushShock(x, y, r, life, maxR, strength) {
+      shocks.push({ x, y, r, life, maxR, strength });
+    }
+
+    /* 扩散冲击波（对外的 api.addShock 与内部演示共用同一个实现） */
+    function addShock(x, y, strength) {
+      shocks.push({
+        x, y, r: 8, life: 1,
+        maxR: Math.max(W, H) * (0.32 + strength * 0.4),
+        strength: strength
+      });
+    }
+
+    function applyDemo(dt) {
+      if (!demo.mode) return;
+      demo.t += dt;
+      if (demo.t >= demo.dur) { clearDemo(); return; }
+
+      if (demo.mode === 'judgment') {
+        // 一道扫描线横扫全场，扫过的节点被"审视"一遍
+        demo.scanX = -90 + (demo.t / demo.dur) * (W + 180);
+      } else if (demo.mode === 'handoff') {
+        // 接力：电波一棒一棒往外送
+        demo.relayT -= dt;
+        if (demo.relayT <= 0 && demo.relayN < 6) {
+          demo.relayN++;
+          demo.relayT = 0.5;
+          const r0 = 46 + demo.relayN * 52;
+          pushShock(demo.cx, demo.cy, r0, 0.95, r0 + 150, 0.5);
+        }
+      } else if (demo.mode === 'companion') {
+        // 双极对话：一方说完，另一方接上
+        demo.talkSide = Math.floor(demo.t / 0.42) % 2;
+      }
+    }
+
+    function clearDemo() {
+      demo.mode = null;
+      demo.t = 0;
+      demo.dur = 0;
+      demo.talkSide = 0;
+      demo.relayN = 0;
+      pairOf.fill(-1);
+      // 只清掉本次演示拉出来的连线，不动涌现事件自己的星座
+      for (let i = longLinks.length - 1; i >= 0; i--) {
+        if (longLinks[i].demo) longLinks.splice(i, 1);
+      }
+    }
+
+    function emitDemo(mode, x, y) {
+      if (!DEMO_DUR[mode]) return;
+      clearDemo();
+      demo.mode = mode;
+      demo.t = 0;
+      demo.dur = DEMO_DUR[mode];
+      demo.cx = x; demo.cy = y;
+      demo.scanX = -90;
+      demo.relayT = 0.12; demo.relayN = 0;
+      demo.talkSide = 0;
+      demo.boundR = Math.min(W, H) * 0.40;
+
+      if (mode === 'emergence') {
+        // 涌现：一次大爆 + 若干次小爆 —— 不是被安排的，是长出来的
+        pushShock(x, y, 10, 1, Math.max(W, H) * 0.58, 1.05);
+        for (let k = 0; k < 6; k++) {
+          pushShock(x + (rnd() - 0.5) * 300, y + (rnd() - 0.5) * 220,
+            8, 0.85, 200 + rnd() * 260, 0.55);
+        }
+      } else if (mode === 'trust') {
+        // 信任：把节点两两锁成稳定的一对
+        let made = 0, guard = 0;
+        while (made < 10 && guard++ < 1200) {
+          const a = (rnd() * count) | 0;
+          if (pairOf[a] >= 0) continue;
+          let best = -1, bestD = 1e9;
+          for (let q = 0; q < 48; q++) {
+            const b = (rnd() * count) | 0;
+            if (b === a || pairOf[b] >= 0) continue;
+            const dx = px[a] - px[b], dy = py[a] - py[b];
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bestD && d2 > 1200 && d2 < 52000) { bestD = d2; best = b; }
+          }
+          if (best >= 0) { pairOf[a] = best; pairOf[best] = a; made++; }
+        }
+      } else if (mode === 'bridge') {
+        // 协作：两侧的节点之间拉出长程连线（星座）
+        const L = [], R = [];
+        for (let q = 0; q < count; q++) (px[q] < W * 0.42 ? L : R).push(q);
+        const n = Math.min(8, L.length, R.length);
+        for (let q = 0; q < n; q++) {
+          const a = L[(q * 7 + 3) % L.length];
+          const b = R[(q * 5 + 11) % R.length];
+          if (a == null || b == null) continue;
+          longLinks.push({ a, b, life: 1, demo: true });
+          pcharge[a] = 1; pcharge[b] = 1;
+        }
+      } else if (mode === 'memory') {
+        // 记忆：被照亮的节点留下缓慢褪去的回声
+        for (let q = 0; q < count; q += 3) {
+          const dx = px[q] - x, dy = py[q] - y;
+          if (dx * dx + dy * dy < 240 * 240) pecho[q] = 0.85;
+        }
+      }
+
+      addShock(x, y, 0.9);
     }
 
     function buildLines() {
@@ -766,6 +995,34 @@
           ln++;
         }
       }
+
+      // 审视扫描线（判断）
+      if (demo.mode === 'judgment' && demo.scanX > -200 && demo.scanX < W + 200) {
+        const a = 0.55 * Math.min(1, (demo.dur - demo.t) / 0.55);
+        for (let k = 0; k < 3; k++) {
+          if (ln >= MAX_LINES) break;
+          const o = ln * 8;
+          lineBuf[o] = demo.scanX; lineBuf[o + 1] = 0; lineBuf[o + 2] = 0.78; lineBuf[o + 3] = a;
+          lineBuf[o + 4] = demo.scanX; lineBuf[o + 5] = H; lineBuf[o + 6] = 0.78; lineBuf[o + 7] = a;
+          ln++;
+        }
+      }
+
+      // 边界环（边界）
+      if (demo.mode === 'bounds') {
+        const segs = 80;
+        const a = Math.min(0.62, demo.t * 0.9);
+        for (let s = 0; s < segs; s++) {
+          if (ln >= MAX_LINES) break;
+          const a0 = (s / segs) * TAU, a1 = ((s + 1) / segs) * TAU;
+          const o = ln * 8;
+          lineBuf[o] = demo.cx + Math.cos(a0) * demo.boundR; lineBuf[o + 1] = demo.cy + Math.sin(a0) * demo.boundR;
+          lineBuf[o + 2] = 0.88; lineBuf[o + 3] = a;
+          lineBuf[o + 4] = demo.cx + Math.cos(a1) * demo.boundR; lineBuf[o + 5] = demo.cy + Math.sin(a1) * demo.boundR;
+          lineBuf[o + 6] = 0.88; lineBuf[o + 7] = a;
+          ln++;
+        }
+      }
       return ln;
     }
 
@@ -776,11 +1033,14 @@
         posBuf[i * 2 + 1] = py[i];
         const charge = pcharge[i];
         const flash = pflash[i];
+        const echo = pecho[i];
         let hue = phue[i];
         if (state.warmth) hue = Math.max(0, Math.min(1, hue + state.warmth * 0.22));
-        attrBuf[i * 3] = (psize[i] * sizeMul) * (1 + charge * 0.7 + flash * 0.5);
+        // 波前：一条亮带随波推进扫过整张网络（这是"波动"被眼睛看见的地方）
+        const crest = 0.5 + 0.5 * pwave[i];
+        attrBuf[i * 3] = (psize[i] * sizeMul) * (1 + charge * 0.7 + flash * 0.5 + echo * 0.55) * (0.82 + crest * 0.42);
         attrBuf[i * 3 + 1] = hue;
-        attrBuf[i * 3 + 2] = (0.30 + charge * 0.6 + flash * 0.45) * (0.75 + state.energy * 0.35);
+        attrBuf[i * 3 + 2] = (0.30 + charge * 0.6 + flash * 0.45 + echo * 0.6) * (0.75 + state.energy * 0.35) * (0.60 + crest * 0.82);
       }
     }
 
@@ -883,13 +1143,28 @@
       },
 
       /* 扩散冲击波 */
-      addShock(x, y, strength) {
-        shocks.push({
-          x, y, r: 8, life: 1,
-          maxR: Math.max(W, H) * (0.32 + strength * 0.4),
-          strength: strength
-        });
+      addShock,
+
+      /* 滚动：驱动共振波
+         dy = 本帧滚动像素。相位与文档锁死 —— 向下滚 100px，
+         波前正好外扩 100px；滚得越快，波越猛。 */
+      setScroll(dy) {
+        wave.vel = wave.vel * 0.86 + dy * 0.14;
+        const e = Math.min(1, Math.abs(wave.vel) / 34);
+        wave.energy = wave.energy * 0.90 + e * 0.10;
+        wave.scrollPhase += dy * wave.k;
       },
+
+      /* 关键词热点：场把注意力聚到那个词上（悬停时） */
+      setHotspot(x, y, on) {
+        hotspot.x = x; hotspot.y = y;
+        hotspot.on = !!on;
+      },
+      clearHotspot() { hotspot.on = false; },
+
+      /* 点击关键词 → 一段可看的"关系演示" */
+      emitDemo(mode, x, y) { emitDemo(mode, x, y); },
+      clearDemo() { clearDemo(); },
 
       start() {
         if (running) return;
@@ -924,7 +1199,11 @@
           particles: count,
           fps: Math.round(1000 / Math.max(1, frameEMA)),
           lines: lastLineCount,
-          events: eventCount
+          events: eventCount,
+          demo: demo.mode,
+          chapter: state.chapterA,
+          mix: +state.mix.toFixed(2),
+          hotspot: hotspot.on ? { x: Math.round(hotspot.x), y: Math.round(hotspot.y) } : null
         };
       }
     };

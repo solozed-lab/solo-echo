@@ -15,6 +15,12 @@
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
+  /* 关键词相关状态：提前声明。
+     syncLiveCopy() 在挂载早期（updateChapter 首次调用）就会被触发，
+     声明必须早于那次调用，否则会撞上 let 的暂时性死区。 */
+  let liveCopyIdx = -1;
+  let demoKey = '';
+
   // 滚动叙事页必须从首屏开始：关掉浏览器的滚动恢复，
   // 否则刷新/重载后可能直接落在页面末尾（章节末端），像"跳过开场"。
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -43,12 +49,12 @@
       topCta: '加入',
       hint: '滚动进入 · 移动鼠标，让回声穿过你',
       sections: [
-        { label: '起点', eyebrow: '万物 · 起点', title: '一切从一个节点开始', body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。', tags: ['万物', '起点'] },
-        { label: '人与 AI', eyebrow: '一 · 人与 AI', title: 'AI 不是工具，而是另一个数字的伙伴', body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。', tags: ['有记忆', '有判断', '有边界'] },
-        { label: 'AI 与 AI', eyebrow: '二 · AI 与 AI', title: '当智能体开始彼此对话', body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。', tags: ['智能体互调', '协作', '接力'] },
-        { label: '人与人', eyebrow: '三 · 人与人', title: '人与人之间，重新回归连接', body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。', tags: ['社群', '信任', '真实关系'] },
-        { label: '万物', eyebrow: '三生万物', title: '犹如三生万物', body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。', tags: ['自生长', '涌现', '开放'] },
-        { label: '加入', eyebrow: '加入我们', title: '让你的回声，被更多节点听见', body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。', tags: [], cta: { primary: { label: '加入', href: '#join' }, secondary: { label: '回到顶部', href: '#top' } } }
+        { label: '起点', eyebrow: '万物 · 起点', title: '一切从一个节点开始', body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。', tags: ['万物', '起点'], tagKeys: ['emergence', null] },
+        { label: '人与 AI', eyebrow: '一 · 人与 AI', title: 'AI 不是工具，而是另一个数字的伙伴', body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。', tags: ['有记忆', '有判断', '有边界'], tagKeys: ['memory', 'judgment', 'bounds'] },
+        { label: 'AI 与 AI', eyebrow: '二 · AI 与 AI', title: '当智能体开始彼此对话', body: '一个模型调用另一个模型，协作、质询、接力。能力不再只属于某一个模型，而属于节点之间刚刚发生的连接。', tags: ['智能体互调', '协作', '接力'], tagKeys: ['handoff', 'bridge', 'handoff'] },
+        { label: '人与人', eyebrow: '三 · 人与人', title: '人与人之间，重新回归连接', body: '在一个人人都在线的时代，稀缺的从来不是渠道，而是连接本身。我们把技术用在让人重新相遇的地方，而不是让相遇变少。', tags: ['社群', '信任', '真实关系'], tagKeys: ['trust', 'trust', 'trust'] },
+        { label: '万物', eyebrow: '三生万物', title: '犹如三生万物', body: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。', tags: ['自生长', '涌现', '开放'], tagKeys: ['emergence', 'emergence', 'emergence'] },
+        { label: '加入', eyebrow: '加入我们', title: '让你的回声，被更多节点听见', body: '这里有正在造 AI 的人、正在和人机协作的团队，也有一群自己就会互相连接的智能体。进来，把你的节点接上。', tags: [], tagKeys: [], cta: { primary: { label: '加入', href: '#join' }, secondary: { label: '回到顶部', href: '#top' } } }
       ],
       hud: {
         toggle: '交互面板', density: '粒子密度', camera: '摄像头', gyro: '陀螺仪', shake: '摇一摇',
@@ -80,12 +86,12 @@
       topCta: 'Join',
       hint: 'Scroll in · move your mouse, let the echo pass through you',
       sections: [
-        { label: 'Origin', eyebrow: 'All Things · Origin', title: 'Everything begins\nwith a single node', body: 'The first node is always a person. Connection does not start with a device — it starts when someone opens their mouth and lets a thought out.', tags: ['All things', 'Origin'] },
-        { label: 'Human & AI', eyebrow: 'I · Human & AI', title: 'AI is not a tool,\nbut another\ndigital companion', body: 'Built from digits, never just digits. It has memory, judgment and limits — and it is always there on the other side of your words.', tags: ['Memory', 'Judgment', 'Limits'] },
-        { label: 'AI & AI', eyebrow: 'II · AI & AI', title: 'When agents start\ntalking to each other', body: 'One model calls another to collaborate, to challenge, to hand off. Capability no longer belongs to one model — it belongs to the connection that just happened between two nodes.', tags: ['Agent mesh', 'Collaboration', 'Handoff'] },
-        { label: 'Human & Human', eyebrow: 'III · Human & Human', title: 'Between people,\nconnection returns', body: 'In an age where everyone is already online, what was scarce was never the channel — it is the connection itself. We build for people meeting again, not for people meeting less.', tags: ['Community', 'Trust', 'Real ties'] },
-        { label: 'All Things', eyebrow: 'From three, all things', title: 'From three,\nall things emerge', body: 'Human & AI, AI & AI, human & human — once all three hold at the same time, new things need no invention. They grow. Nothing here is manufactured; it is brought into being by the relationships themselves.', tags: ['Self-growing', 'Emergence', 'Open'] },
-        { label: 'Join', eyebrow: 'Join us', title: 'Let your echo be\nheard by more nodes', body: 'People building AI. Teams working alongside machines. Agents that already connect to one another on their own. Come in and plug your node into the graph.', tags: [], cta: { primary: { label: 'Join', href: '#join' }, secondary: { label: 'Back to top', href: '#top' } } }
+        { label: 'Origin', eyebrow: 'All Things · Origin', title: 'Everything begins\nwith a single node', body: 'The first node is always a person. Connection does not start with a device — it starts when someone opens their mouth and lets a thought out.', tags: ['All things', 'Origin'], tagKeys: ['emergence', null] },
+        { label: 'Human & AI', eyebrow: 'I · Human & AI', title: 'AI is not a tool,\nbut another\ndigital companion', body: 'Built from digits, never just digits. It has memory, judgment and limits — and it is always there on the other side of your words.', tags: ['Memory', 'Judgment', 'Limits'], tagKeys: ['memory', 'judgment', 'bounds'] },
+        { label: 'AI & AI', eyebrow: 'II · AI & AI', title: 'When agents start\ntalking to each other', body: 'One model calls another to collaborate, to challenge, to hand off. Capability no longer belongs to one model — it belongs to the connection that just happened between two nodes.', tags: ['Agent mesh', 'Collaboration', 'Handoff'], tagKeys: ['handoff', 'bridge', 'handoff'] },
+        { label: 'Human & Human', eyebrow: 'III · Human & Human', title: 'Between people,\nconnection returns', body: 'In an age where everyone is already online, what was scarce was never the channel — it is the connection itself. We build for people meeting again, not for people meeting less.', tags: ['Community', 'Trust', 'Real ties'], tagKeys: ['trust', 'trust', 'trust'] },
+        { label: 'All Things', eyebrow: 'From three, all things', title: 'From three,\nall things emerge', body: 'Human & AI, AI & AI, human & human — once all three hold at the same time, new things need no invention. They grow. Nothing here is manufactured; it is brought into being by the relationships themselves.', tags: ['Self-growing', 'Emergence', 'Open'], tagKeys: ['emergence', 'emergence', 'emergence'] },
+        { label: 'Join', eyebrow: 'Join us', title: 'Let your echo be\nheard by more nodes', body: 'People building AI. Teams working alongside machines. Agents that already connect to one another on their own. Come in and plug your node into the graph.', tags: [], tagKeys: [], cta: { primary: { label: 'Join', href: '#join' }, secondary: { label: 'Back to top', href: '#top' } } }
       ],
       hud: {
         toggle: 'Controls', density: 'Density', camera: 'Camera', gyro: 'Gyroscope', shake: 'Shake',
@@ -108,6 +114,70 @@
         body: 'SOLO & ECHO is still being prepared. When it opens, your first node joins in — with AI, and with people.',
         close: 'Got it', hint: 'Look around meanwhile: move your mouse and the network answers.'
       }
+    }
+  };
+
+  /* ==========================================================
+     可呼出的关键词
+     ----------------------------------------------------------
+     页面讲的是"关系"，那就把关系本身做成可以碰的东西：
+     · 悬停 → 词亮起，同时把粒子场的注意力拉到它身上（波心会漂过去）
+     · 点击 → 触发一段可看的关系演示（记忆 / 判断 / 边界 / 协作 / 接力 / 信任 / 涌现 / 伙伴）
+     正文里的词按术语表标记，标签本身就是每章的关键词。
+     ========================================================== */
+  const KEYWORDS = {
+    zh: [
+      { term: '伙伴', key: 'companion' },
+      { term: '回应', key: 'companion' },
+      { term: '记忆', key: 'memory' },
+      { term: '判断', key: 'judgment' },
+      { term: '边界', key: 'bounds' },
+      { term: '智能体', key: 'handoff' },
+      { term: '协作', key: 'bridge' },
+      { term: '质询', key: 'bridge' },
+      { term: '接力', key: 'handoff' },
+      { term: '信任', key: 'trust' },
+      { term: '相遇', key: 'trust' },
+      { term: '生长', key: 'emergence' },
+      { term: '涌现', key: 'emergence' }
+    ],
+    en: [
+      { term: 'companion', key: 'companion' },
+      { term: 'memory', key: 'memory' },
+      { term: 'judgment', key: 'judgment' },
+      { term: 'limits', key: 'bounds' },
+      { term: 'agents', key: 'handoff' },
+      { term: 'collaborate', key: 'bridge' },
+      { term: 'challenge', key: 'bridge' },
+      { term: 'handoff', key: 'handoff' },
+      { term: 'trust', key: 'trust' },
+      { term: 'community', key: 'trust' },
+      { term: 'emerge', key: 'emergence' },
+      { term: 'grow', key: 'emergence' }
+    ]
+  };
+
+  /* 每个关键词的"名字"和"它意味着什么"（名字进 HUD，说明进落点提示） */
+  const KEY_LABEL = {
+    zh: {
+      memory: ['记忆', '亮过的地方会留下回声'],
+      judgment: ['判断', '一道审视扫过全场'],
+      bounds: ['边界', '它知道自己到哪儿为止'],
+      bridge: ['协作', '两侧被拉成一张星座'],
+      handoff: ['接力', '电波一棒一棒往外送'],
+      trust: ['信任', '节点两两结成稳定的一对'],
+      emergence: ['涌现', '不是被安排的，是长出来的'],
+      companion: ['伙伴', '一方说完，另一方接上']
+    },
+    en: {
+      memory: ['Memory', 'what lit up keeps an echo'],
+      judgment: ['Judgment', 'a sweep examines the field'],
+      bounds: ['Limits', 'it knows where it stops'],
+      bridge: ['Collaboration', 'two sides pulled into a constellation'],
+      handoff: ['Handoff', 'the charge relays outward'],
+      trust: ['Trust', 'nodes settle into stable pairs'],
+      emergence: ['Emergence', 'not arranged, grown'],
+      companion: ['Companion', 'one answers the other']
     }
   };
 
@@ -179,9 +249,20 @@
   world.appendChild(canvas);
 
   const field = window.SWField.create(canvas, { reduce: reduce, coarse: coarse });
-  field.setDensity(coarse ? 0.5 : 0.78);
+  field.setDensity(coarse ? 0.55 : 0.9);
 
-  /* ------------------------------------------------ 章节时间轴（与引擎一致） */
+  /* 调试/自动化句柄：让外部（验收脚本、开发者控制台）能直接摸到场与传感器。
+     不影响页面行为，只是把内部对象放到一个稳定的名字上。 */
+  window.SWPage = { field, sensors: null, world };
+
+  /* ------------------------------------------------ 章节时间轴（与引擎一致）
+     ⚠️ 这里必须返回「段数组」本身。
+     引擎（scrub-engine.js）的段链是 dive0, conn0, dive1, conn1 …，
+     宽度取自同样的配置（diveScroll 1.3 / connScroll 0.5 / 每章自己的 scroll），
+     所以两套时间轴是同一条，场与文案才会对齐。
+     （早先这里返回的是 { segs, total } 对象，于是 SEGMENTS.length 恒为
+       undefined，updateChapter() 每次都提前 return —— 六章的粒子形态
+       其实一次都没生效过，场全程停在第 0 章的球云上。） */
   const DIVE_W = 1.3, CONN_W = 0.5;
   let SEGMENTS = [];
 
@@ -194,7 +275,7 @@
     const vh = window.innerHeight;
     let off = 0;
     segs.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
-    return { segs, total: off * vh };
+    return segs;
   }
 
   let lastChapter = -1;
@@ -224,6 +305,7 @@
     if (a !== lastChapter) {
       if (lastChapter >= 0) { SWSfx.play('whoosh'); SWSfx.play('hit'); }
       lastChapter = a;
+      syncLiveCopy();
     }
   }
 
@@ -253,6 +335,52 @@
     field.addShock(e.clientX, e.clientY, 1);
   }, { passive: true });
 
+  /* --------------------------------------------- 关键词呼出（悬停 / 点击）
+     悬停 → 词亮起，同时把粒子场的注意力拉到它身上（波心会漂过去）
+     点击 → 触发一段可看的关系演示 */
+  function keyCenter(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  world.addEventListener('pointerover', (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    const el = e.target.closest && e.target.closest('.sw-key');
+    if (!el) return;
+    const c = keyCenter(el);
+    field.setHotspot(c.x, c.y, true);
+    SWSfx.play('tick');
+  }, { passive: true });
+
+  world.addEventListener('pointerout', (e) => {
+    const el = e.target.closest && e.target.closest('.sw-key');
+    if (!el) return;
+    const to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.sw-key');
+    if (to) return;                       // 还在关键词之间移动：热点不撤
+    field.clearHotspot();
+  }, { passive: true });
+
+  world.addEventListener('click', (e) => {
+    const el = e.target.closest && e.target.closest('.sw-key');
+    if (!el) return;
+    const key = el.dataset.key;
+    if (!key) return;
+    const c = keyCenter(el);
+    field.emitDemo(key, c.x, c.y);
+    syncDemoClass(key);
+    const L = KEY_LABEL[lang] && KEY_LABEL[lang][key];
+    if (L) flash(L[0] + ' · ' + L[1]);
+    SWSfx.play('chime');
+  });
+
+  world.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target.closest && e.target.closest('.sw-key');
+    if (!el) return;
+    e.preventDefault();
+    el.click();
+  });
+
   /* ----------------------------------------------------------- 尺寸同步 */
   function resizeField() {
     const dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2);
@@ -272,6 +400,7 @@
       flash(T().messages.shake);
     }
   });
+  if (window.SWPage) window.SWPage.sensors = sensors;
 
   /* --------------------------------------------------------------- HUD */
   const hud = document.createElement('aside');
@@ -283,8 +412,8 @@
     <div class="sw-hud__panel" hidden>
       <div class="sw-hud__row">
         <label for="sw-density" data-i18n="density"></label>
-        <input id="sw-density" type="range" min="20" max="100" value="${coarse ? 50 : 78}">
-        <output id="sw-density-out">${coarse ? 50 : 78}</output>
+        <input id="sw-density" type="range" min="20" max="100" value="${coarse ? 55 : 90}">
+        <output id="sw-density-out">${coarse ? 55 : 90}</output>
       </div>
       <div class="sw-hud__row sw-hud__row--btns">
         <button type="button" data-sensor="camera" data-i18n="camera"></button>
@@ -412,7 +541,15 @@
     ];
     if (st.camera) bits.push(st.camera ? 'CAM ' + Math.round(st.motionLevel * 100) + '%' : '');
     if (st.orientation) bits.push('GYRO');
+    // 正在跑的关键词演示
+    if (s.demo) {
+      const L = KEY_LABEL[lang] && KEY_LABEL[lang][s.demo];
+      if (L) bits.push('RES ' + L[0]);
+    }
     hudStat.textContent = bits.filter(Boolean).join(' · ');
+
+    // 演示结束后关键词的高亮自动退场
+    syncDemoClass(s.demo || '');
   }
   requestAnimationFrame(statsLoop);
 
@@ -504,6 +641,87 @@
   if (topCta) rightGroup.appendChild(topCta);
   if (topbar) topbar.appendChild(rightGroup);
 
+  /* ------------------------------------------------- 关键词标记工具 */
+  const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, c => ESC_MAP[c]);
+  }
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /* 把正文里的术语包成 <mark class="sw-key" data-key="...">。
+     单遍扫描 + 不重叠挑选：先按位置排序，重叠时取更长的那个，
+     避免"自生长"被"生长"从中间切开。 */
+  function wrapTerms(text, dict) {
+    const hits = [];
+    dict.forEach(k => {
+      const ascii = !/[^\x20-\x7E]/.test(k.term);
+      if (ascii) {
+        const re = new RegExp('\\b' + escapeRegExp(k.term) + '\\b', 'gi');
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          hits.push({ start: m.index, end: m.index + m[0].length, key: k.key, text: m[0] });
+          if (m.index === re.lastIndex) re.lastIndex++;
+        }
+      } else {
+        let idx = text.indexOf(k.term);
+        while (idx >= 0) {
+          hits.push({ start: idx, end: idx + k.term.length, key: k.key, text: k.term });
+          idx = text.indexOf(k.term, idx + k.term.length);
+        }
+      }
+    });
+    hits.sort((a, b) => a.start - b.start || b.end - a.end);
+    const kept = [];
+    let last = -1;
+    for (const h of hits) {
+      if (h.start >= last) { kept.push(h); last = h.end; }
+    }
+    if (!kept.length) return null;
+    let html = '', pos = 0;
+    kept.forEach(h => {
+      html += escapeHtml(text.slice(pos, h.start));
+      html += '<mark class="sw-key" data-key="' + h.key + '" tabindex="-1">' + escapeHtml(h.text) + '</mark>';
+      pos = h.end;
+    });
+    html += escapeHtml(text.slice(pos));
+    return html;
+  }
+
+  function markBodyKeywords() {
+    const dict = KEYWORDS[lang] || [];
+    world.querySelectorAll('.sw-copy__body').forEach(el => {
+      const text = el.textContent;
+      if (!text) return;
+      const html = wrapTerms(text, dict);
+      el.innerHTML = html != null ? html : escapeHtml(text);
+    });
+  }
+
+  /* 只有当前可见的章节里的关键词才可聚焦 ——
+     否则 Tab 键会在看不见的文案里穿行。 */
+  function syncLiveCopy() {
+    const copies = world.querySelectorAll('.sw-copy');
+    let idx = -1;
+    copies.forEach((c, i) => { if (parseFloat(c.style.opacity || '0') > 0.5) idx = i; });
+    if (idx === liveCopyIdx) return;
+    liveCopyIdx = idx;
+    copies.forEach((c, i) => {
+      c.querySelectorAll('.sw-key').forEach(m => { m.tabIndex = i === idx ? 0 : -1; });
+    });
+  }
+
+  /* 关系演示正在跑 → 同一个 key 的关键词保持点亮 */
+  function syncDemoClass(key) {
+    if (key === demoKey) return;
+    demoKey = key;
+    world.querySelectorAll('.sw-key.is-demo').forEach(el => el.classList.remove('is-demo'));
+    if (key) {
+      world.querySelectorAll('.sw-key[data-key="' + key + '"]').forEach(el => el.classList.add('is-demo'));
+    }
+  }
+
   function applyLang(next, persist) {
     if (!I18N[next]) return;
     lang = next;
@@ -543,7 +761,13 @@
       const body = c.querySelector('.sw-copy__body');
       if (body) body.textContent = s.body;
       const tags = c.querySelectorAll('.sw-copy__tags li');
-      tags.forEach((li, k) => { if (s.tags[k] != null) li.textContent = s.tags[k]; });
+      tags.forEach((li, k) => {
+        if (s.tags[k] == null) return;
+        li.textContent = s.tags[k];
+        const key = (s.tagKeys && s.tagKeys[k]) || null;
+        if (key) { li.dataset.key = key; li.classList.add('sw-key', 'sw-key--tag'); }
+        else { li.removeAttribute('data-key'); li.classList.remove('sw-key', 'sw-key--tag'); }
+      });
       const btns = c.querySelectorAll('.sw-copy__cta .sw-btn');
       if (s.cta && btns.length) {
         if (btns[0]) {
@@ -572,6 +796,10 @@
     // 按钮状态
     langToggle.querySelectorAll('button').forEach(b => b.classList.toggle('is-on', b.dataset.lang === lang));
 
+    // 关键词标记：语言换了，正文里的词要重新标一遍
+    markBodyKeywords();
+    syncLiveCopy();
+
     if (persist !== false) {
       try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* 忽略 */ }
     }
@@ -587,10 +815,22 @@
   applyLang(lang, false);
   syncSoundBtn();
 
-  /* --------------------------------------------------------- 滚动同步 */
+  /* --------------------------------------------------------- 滚动同步
+     滚动速度 → 共振波：向下滚多少像素，波前就外扩多少像素。
+     钳一下上限，避免程序化跳转把波的相位一次甩飞。 */
+  let lastScrollY = window.scrollY || 0;
+  let liveSyncAt = 0;
   function scrollLoop() {
     requestAnimationFrame(scrollLoop);
+    const y = window.scrollY || window.pageYOffset;
+    const dy = Math.max(-140, Math.min(140, y - lastScrollY));
+    lastScrollY = y;
+    field.setScroll(dy);
     updateChapter();
+    // 引擎的文案透明度是自己演化的，跟 world.js 的章节索引不是同一件事，
+    // 所以"当前可见的文案"要轮询着对，而不是只在章节切换那一瞬间对。
+    const now = performance.now();
+    if (now - liveSyncAt > 120) { liveSyncAt = now; syncLiveCopy(); }
   }
   requestAnimationFrame(scrollLoop);
 
