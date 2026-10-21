@@ -20,3 +20,5 @@ film5/vendor/
 film5/out/
 film5/.om/
 film5/*.png
+# 音轨是 om sound 的产物（55MB，每次改配乐就换一个版本，不进版本库）
+film5/assets/sound.wav
