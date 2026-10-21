@@ -303,12 +303,52 @@
       mix = 0.35 + 0.65 * (t * t * (3 - 2 * t));
     }
     field.setChapter(a, b, mix);
-    // 章节切换：这一章的动机（与宣传片同一套动机，音区逐章递进）
+    // 章节切换（场的形态变了）
     if (a !== lastChapter) {
-      if (lastChapter >= 0) { SWSfx.playChapter(a); }
       lastChapter = a;
       syncLiveCopy();
     }
+
+    // 切屏音：绑定"感知到的章节"，不是场的形态。
+    // 引擎的 near 逻辑是：连接段过半就算到了下一章。
+    // 之前用的是场的 a（连接段里仍然是上一章）→ 表现就是"连接段没声音"，
+    // 滚起来忽有忽无。
+    const near = seg.kind === 'dive'
+      ? seg.si
+      : (p > 0.5 ? Math.min(SECTION_BASE.length - 1, seg.si + 1) : seg.si);
+    scheduleChapterSound(near);
+  }
+
+  /* 切屏音的调度
+     ------------------------------------------------------------------
+     · 绑定"感知到的章节"（引擎的 near 逻辑）—— 连接段过半就换章，
+       不会再出现"连接段里没声音"；
+     · 快速连滚时只播最后落地的那一章（中间的不播），不会叠成一团；
+     · 但连续滚动超过 0.45 秒也会给一声，避免一路静着；
+     · 停下后 90ms 内落地，这个延迟听不出来。 */
+  const SOUND_SETTLE = 90;    // 多久没有新的章节变化就算"落地"
+  const SOUND_MAXWAIT = 450;  // 连续滚动时的最长等待
+  let lastSoundChapter = 0, pendingChapter = -1, pendingTimer = 0, pendingAt = 0;
+
+  function flushChapterSound() {
+    if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = 0; }
+    if (pendingChapter < 0) return;
+    const c = pendingChapter;
+    pendingChapter = -1;
+    pendingAt = 0;
+    SWSfx.playChapter(c);
+  }
+
+  function scheduleChapterSound(near) {
+    if (near === lastSoundChapter) return;
+    lastSoundChapter = near;
+    pendingChapter = near;
+    const now = performance.now();
+    if (!pendingAt) pendingAt = now;
+    if (pendingTimer) clearTimeout(pendingTimer);
+    const waited = now - pendingAt;
+    pendingTimer = setTimeout(flushChapterSound,
+      Math.max(0, Math.min(SOUND_SETTLE, SOUND_MAXWAIT - waited)));
   }
 
   /* ------------------------------------------------------- 指针 / 触摸 */
@@ -337,11 +377,14 @@
     if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang, .sw-topcta, .sw-modal, .sw-key')) return;
     field.setPointer(e.clientX, e.clientY, 0, 0, true);
     field.addShock(e.clientX, e.clientY, 1);
+    SWSfx.sample('pop', { gain: 0.34 });
   }, { passive: true });
 
   /* --------------------------------------------- 关键词呼出（悬停 / 点击）
      悬停 → 词亮起，同时把粒子场的注意力拉到它身上（波心会漂过去）
      点击 → 触发一段可看的关系演示 */
+  let lastHoverSfx = 0;
+
   function keyCenter(el) {
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -353,7 +396,12 @@
     if (!el) return;
     const c = keyCenter(el);
     field.setHotspot(c.x, c.y, true);
-    SWSfx.play('tick');
+    // 悬停音很轻，但要节流：快速扫过一排词不能变成一串噪音
+    const now = performance.now();
+    if (now - lastHoverSfx > 70) {
+      lastHoverSfx = now;
+      SWSfx.sample('hover', { gain: 0.20 });
+    }
   }, { passive: true });
 
   world.addEventListener('pointerout', (e) => {
@@ -377,14 +425,14 @@
     if (field.stats().demo === key) {
       field.clearDemo();
       syncDemoClass('');
-      SWSfx.play('close');
+      SWSfx.sample('toggle', { rate: 0.88 });
       return;
     }
 
     field.emitDemo(key, c.x, c.y);
     syncDemoClass(key);
     if (L) flash(L[0] + ' · ' + L[1], true);
-    SWSfx.play('chime');
+    SWSfx.sample('click');
   });
 
   world.addEventListener('keydown', (e) => {
@@ -605,7 +653,7 @@
     if (modal.classList.contains('is-open')) return;
     lastFocus = document.activeElement;
     modal.classList.add('is-open');
-    SWSfx.play('impact');
+    SWSfx.sample('modal');
     const ok = modal.querySelector('.sw-modal__ok');
     if (ok) ok.focus({ preventScroll: true });
   }
@@ -613,7 +661,7 @@
   function closeModal() {
     if (!modal.classList.contains('is-open')) return;
     modal.classList.remove('is-open');
-    SWSfx.play('close');
+    SWSfx.sample('toggle', { rate: 0.86 });
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
   }
 

@@ -74,51 +74,123 @@
   }
 
   /* ==================================================================
-     切屏音：一记短促的"叮咚"，每章递进
+     音效分两层
      ------------------------------------------------------------------
-     要的是"一记"而不是一段过场：整声 < 0.45 秒，像被敲了一下。
-     乐谱 K:Em，动机 = 回声 E–B–e–B —— 每章取该章动机里的音，
-     叠成一个和弦，一击即止。
+     1) 界面事件（点击 / 悬停 / 开关 / 弹出 / 涟漪）
+        → 用 CC0 音效库 "Crisp UI"（sfxmint.com，CC0 1.0，免署名）。
+          这套的定位是"干、脆、亮"，正是科技感该有的质地；
+          全部是 45–510ms 的短音，没有一个拖长尾巴。
+          共 7 个文件 27KB，懒加载：第一次用户手势之后才拉。
+     2) 切屏（章节切换）
+        → CC0 的 swipe（逐章变调，一路往上走）+ 一记本场合成的
+          FM 落点音（E 小调，和弦逐章变满）。
+          片子里的动机和站点是同一件乐器。
+     ------------------------------------------------------------------ */
+  const SAMPLE_FILES = {
+    click: 'assets/sfx/click.mp3',
+    hover: 'assets/sfx/hover.mp3',
+    toggle: 'assets/sfx/toggle.mp3',
+    swipe: 'assets/sfx/swipe.mp3',
+    pop: 'assets/sfx/pop.mp3',
+    modal: 'assets/sfx/modal.mp3',
+    confirm: 'assets/sfx/confirm.mp3'
+  };
+  const samples = {};        // name -> AudioBuffer
+  const sampleBytes = {};    // name -> ArrayBuffer（页面加载时就拉下来）
+  let samplesLoading = false;
 
-     递进的方式 = 和弦越来越满、音区越来越亮：
-       起点   E4 一个音          —— 孤零零
-       人与 AI E4+B4 五度        —— 对面有个应声的
-       AI 与 AI E4+B4+E5 八度五度 —— 紧、准、像机器对撞
-       人与人 E4+G4+B4 小三和弦  —— 全片唯一有体温的一段
-       万物   E5+G5+B5 升八度     —— 三种关系同时成立
-       加入   E4+B4+E5+B5 四音齐备 —— 万物齐了
+  /* 提前把 mp3 拉下来 —— 这一步不需要 AudioContext，可以页面一加载就做。
+     等用户第一次手势、AudioContext 存在了再解码，
+     这样第一次点击就有声音；同时又不会在没有手势时创建 AudioContext
+     （浏览器会打一条"The AudioContext was not allowed to start"的警告）。 */
+  function prefetchSamples() {
+    if (samplesLoading) return;
+    samplesLoading = true;
+    Object.keys(SAMPLE_FILES).forEach(name => {
+      fetch(SAMPLE_FILES[name])
+        .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('sfx ' + r.status))))
+        .then(ab => { sampleBytes[name] = ab; })
+        .catch(() => { /* 音频拉不到也不该弄坏页面：这一路静默降级 */ });
+    });
+  }
+
+  function loadSamples() {
+    const c = ensure();
+    if (!c) return;
+    Object.keys(sampleBytes).forEach(name => {
+      if (samples[name]) return;
+      // decodeAudioData 会"消耗"掉 ArrayBuffer，所以传一份拷贝
+      c.decodeAudioData(sampleBytes[name].slice(0))
+        .then(buf => { samples[name] = buf; })
+        .catch(() => {});
+    });
+  }
+
+  /* 播一个采样。
+     rate = 变调（切屏音逐章递进就靠它），gain 是相对主增益的音量。 */
+  function sample(name, opts) {
+    if (!enabled) return;
+    const buf = samples[name];
+    const c = ensure();
+    if (!buf || !c || c.state !== 'running') return;
+    const o = opts || {};
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = o.rate || 1;
+    const g = c.createGain();
+    g.gain.value = o.gain == null ? 0.55 : o.gain;
+    src.connect(g);
+    g.connect(master);
+    src.start(now() + (o.delay || 0));
+  }
+
+  /* 切屏音：每章一记，逐章递进
+     ------------------------------------------------------------------
+     「切」= CC0 的 swipe，逐章变调（0.88 → 1.24，一路往上走）
+     「落」= 本场合成的 FM 音，E 小调，和弦逐章变满：
+       起点   E4              一记孤独的单音
+       人与 AI E4+B4          加一个五度 —— 对面有东西了
+       AI 与 AI E4+B4+E5      八度叠五度 —— 紧、准、机器对撞
+       人与人 E4+G4+B4       E 小三和弦 —— 全片唯一有体温的一段
+       万物   E5+G5+B5       升八度 —— 三种关系同时成立
+       加入   E4+B4+E5+B5    四音齐备 —— 万物齐了
      ------------------------------------------------------------------ */
   const CHAPTER_SOUND = [
-    // 起点：一记孤独的 E4，只有钟声，没有落点
-    { f: [329.63], sub: 0, air: 0.045, airHz: [1800, 3200], bell: 0.16, dur: 0.30 },
-    // 人与 AI：加一个五度 —— 对面有东西了
-    { f: [329.63, 493.88], sub: 82, air: 0.060, airHz: [1600, 3400], bell: 0.15, dur: 0.30 },
-    // AI 与 AI：八度叠五度 —— 紧、准、机器对撞
-    { f: [329.63, 493.88, 659.26], sub: 98, air: 0.080, airHz: [2200, 4200], bell: 0.145, dur: 0.30 },
-    // 人与人：E 小三和弦 —— 全片唯一有体温的一段
-    { f: [329.63, 392.00, 493.88], sub: 73, air: 0.060, airHz: [1200, 2600], bell: 0.15, dur: 0.32 },
-    // 万物：升八度的三和弦 —— 三种关系同时成立
-    { f: [659.26, 783.99, 987.77], sub: 98, air: 0.095, airHz: [2400, 4600], bell: 0.135, dur: 0.32 },
-    // 加入：四音齐备 —— 万物齐了
-    { f: [329.63, 493.88, 659.26, 987.77], sub: 65, air: 0.075, airHz: [1400, 3000], bell: 0.15, dur: 0.36 }
+    { f: [329.63], ratio: 1.00, index: 0.8, sub: 0, rate: 0.88, gain: 0.055 },
+    { f: [329.63, 493.88], ratio: 1.41, index: 1.6, sub: 82, rate: 0.95, gain: 0.055 },
+    { f: [329.63, 493.88, 659.26], ratio: 2.00, index: 2.4, sub: 98, rate: 1.02, gain: 0.052 },
+    { f: [329.63, 392.00, 493.88], ratio: 1.41, index: 1.2, sub: 73, rate: 1.08, gain: 0.055 },
+    { f: [659.26, 783.99, 987.77], ratio: 3.00, index: 1.8, sub: 98, rate: 1.16, gain: 0.048 },
+    { f: [329.63, 493.88, 659.26, 987.77], ratio: 2.00, index: 1.4, sub: 65, rate: 1.24, gain: 0.055 }
   ];
 
-  /* 钟声（"叮"）：非谐分音 + 快衰减，像敲一下金属 */
-  function bell(freq, t0, dur, gain) {
-    tone('sine', freq, freq * 0.998, dur, gain, t0);
-    tone('sine', freq * 2.01, freq * 2.00, dur * 0.55, gain * 0.40, t0);
-    tone('sine', freq * 3.02, freq * 3.00, dur * 0.30, gain * 0.15, t0);
-    tone('sine', freq * 4.07, freq * 4.03, dur * 0.16, gain * 0.06, t0);
+  /* FM 落点音：载波 + 调制器，调制指数快速衰减 = 金属/电子质感。
+     比纯正弦叠加"科技"得多，也不像真钟声那样暖。 */
+  function fmPing(freq, t0, dur, gain, ratio, index) {
+    const c = ensure();
+    if (!c) return;
+    const car = c.createOscillator();
+    car.type = 'sine';
+    car.frequency.value = freq;
+    const mod = c.createOscillator();
+    mod.type = 'sine';
+    mod.frequency.value = freq * ratio;
+    const mg = c.createGain();
+    mg.gain.setValueAtTime(freq * index, t0);
+    mg.gain.exponentialRampToValueAtTime(Math.max(1, freq * index * 0.015), t0 + dur * 0.4);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    mod.connect(mg);
+    mg.connect(car.frequency);
+    car.connect(g);
+    g.connect(master);
+    mod.start(t0); mod.stop(t0 + dur + 0.02);
+    car.start(t0); car.stop(t0 + dur + 0.05);
   }
 
-  /* 落点（"咚"）：短促的低频下坠 */
-  function thump(freq, t0, dur, gain) {
-    tone('sine', freq * 1.9, freq * 0.55, dur, gain, t0);
-    tone('triangle', freq * 0.95, freq * 0.52, dur * 0.7, gain * 0.42, t0);
-  }
-
-  let lastChapterAt = -1;
-  const diag = { chapter: -1, voices: [], count: 0 };
+  const diag = { chapter: -1, voices: [], count: 0, samples: [] };
 
   function playChapter(i) {
     const c = CHAPTER_SOUND[i];
@@ -126,22 +198,14 @@
     if (!enabled) return;
     const ctx = ensure();
     if (!ctx || ctx.state !== 'running') return;
-    // 快速连滚时不叠音：同一记至少隔 0.2 秒
-    const t = now();
-    if (t - lastChapterAt < 0.2) return;
-    lastChapterAt = t;
 
-    const t0 = t + 0.008;
-    // 和弦的音错开 9 毫秒依次落下 —— 听起来是"叮叮"一下，不是死板的齐奏
-    c.f.forEach((f, k) => {
-      bell(f, t0 + k * 0.009, c.dur, c.bell);
-    });
-
-    // 落点
-    if (c.sub) thump(c.sub, t0, 0.22, 0.17);
-
-    // 切的那一下风（很短）
-    noise(0.13, c.air, c.airHz[0], c.airHz[1], 1.2, 'bandpass');
+    const t0 = now() + 0.005;
+    // 「切」：干、脆、亮的 swipe，逐章变调 → 一路往上走
+    sample('swipe', { rate: c.rate, gain: 0.45 });
+    // 「落」：E 小调 FM 音，和弦逐章变满
+    c.f.forEach((f, k) => fmPing(f, t0 + k * 0.007, 0.30, c.gain, c.ratio, c.index));
+    // 低频落点
+    if (c.sub) tone('sine', c.sub * 1.7, c.sub * 0.5, 0.20, 0.14, t0);
 
     diag.chapter = i;
     diag.voices = c.f.slice();
@@ -176,6 +240,8 @@
     if (!c) return;
     if (c.state === 'suspended') c.resume();
     unlocked = true;
+    // 采样要等 AudioContext 存在才能 decode，所以放在解锁之后
+    loadSamples();
   }
 
   function play(name, opts) {
@@ -190,11 +256,12 @@
   window.SWSfx = {
     play,
     playChapter,
+    sample,
     unlock,
     get enabled() { return enabled; },
     get unlocked() { return unlocked; },
     /* 只读诊断：验收脚本用来确认"每章确实是不同的动机" */
-    get diag() { return { chapter: diag.chapter, voices: diag.voices.slice(), count: diag.count }; },
+    get diag() { return { chapter: diag.chapter, voices: diag.voices.slice(), count: diag.count, loaded: Object.keys(samples).length }; },
     setEnabled(on) {
       enabled = !!on;
       try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch (e) {}
@@ -207,4 +274,7 @@
   ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(ev => {
     window.addEventListener(ev, unlock, { once: true, passive: true });
   });
+
+  // 采样文件提前拉下来（不需要 AudioContext），保证第一次点击就有声音
+  prefetchSamples();
 })();
