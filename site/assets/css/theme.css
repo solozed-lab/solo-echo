@@ -129,7 +129,9 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   box-shadow: 0 0 10px color-mix(in srgb, var(--sw-accent) 85%, transparent);
 }
 
-/* 标签本身就是关键词（每章三个） */
+/* 标签本身就是关键词（每章三个）——
+   和正文里的词是同一类东西：同样的辉光、同样的点亮、同样的声音，
+   只是形状不同（胶囊 vs 带下划线的词）。 */
 .sw-copy__tags li.sw-key {
   cursor: pointer;
   transition:
@@ -147,7 +149,7 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   box-shadow: 0 10px 30px color-mix(in srgb, var(--sw-accent) 34%, transparent);
 }
 
-/* 关系演示正在跑：同一个 key 的词保持点亮 */
+/* 关系演示正在跑 → 同一个 key 的词保持点亮 */
 .sw-key:not(.sw-key--tag).is-demo {
   color: #fff;
   background-position: -20% 0;
@@ -163,6 +165,14 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   background: color-mix(in srgb, var(--sw-accent) 30%, rgba(255, 255, 255, 0.08));
   border-color: color-mix(in srgb, var(--sw-accent) 88%, transparent);
   box-shadow: 0 10px 34px color-mix(in srgb, var(--sw-accent) 42%, transparent);
+}
+
+/* "开着的"关键词轻轻呼吸 —— 告诉用户这一项现在是激活的，
+   而不是看起来只是被 hover 过。 */
+.sw-key.is-demo { animation: sw-key-live 2.6s ease-in-out infinite; }
+@keyframes sw-key-live {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.28); }
 }
 
 .sw-btn--primary {
@@ -349,6 +359,14 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   border-top: 1px solid rgba(234, 246, 255, 0.09);
 }
 .sw-hud__note { margin: 8px 0 0; font-size: 0.68rem; line-height: 1.5; color: rgba(143, 166, 196, 0.62); }
+.sw-hud__legend {
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid rgba(234, 246, 255, 0.09);
+  font-size: 0.68rem; line-height: 1.6;
+  color: color-mix(in srgb, var(--sw-cyan) 62%, #fff);
+  opacity: .82;
+}
 .sw-hud__msg { margin: 6px 0 0; font-size: 0.7rem; color: rgba(255, 183, 101, 0.9); min-height: 1em; }
 .sw-hud__msg[data-tone=ok] { color: rgba(77, 227, 255, 0.9); }
 
@@ -365,11 +383,32 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   text-shadow: 0 0 28px var(--sw-cyan);
   opacity: 0;
 }
-.sw-flash.is-on { animation: sw-flash 1.5s cubic-bezier(.2,.7,.2,1); }
+.sw-flash.is-on { animation: sw-flash 1.8s cubic-bezier(.2,.7,.2,1); }
 @keyframes sw-flash {
   0% { opacity: 0; transform: translate(-50%,-50%) scale(.86); letter-spacing: .1em; }
   22% { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .34em; }
   100% { opacity: 0; transform: translate(-50%,-50%) scale(1.08); letter-spacing: .5em; }
+}
+
+/* 关系演示的说明文字：
+   1) 停留够久（4 秒以上）—— 原来 1.5 秒就没了，等于没说完；
+   2) 放到画面上方的空白处 —— 停这么久，压在正文上就没法读了；
+   3) 允许折行 —— 英文的长句不能顶出屏幕。 */
+.sw-flash.is-long {
+  top: 19%;
+  width: min(86vw, 760px);
+  text-align: center;
+  font-size: clamp(.95rem, 1.7vw, 1.25rem);
+  letter-spacing: .22em;
+  line-height: 1.7;
+  text-shadow: 0 0 28px var(--sw-cyan), 0 2px 22px rgba(0, 0, 0, .85);
+}
+.sw-flash.is-long.is-on { animation: sw-flash-long 5.2s cubic-bezier(.2,.7,.2,1); }
+@keyframes sw-flash-long {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.94); letter-spacing: .12em; }
+  7% { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .24em; }
+  82% { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .24em; }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.04); letter-spacing: .36em; }
 }
 
 /* ==========================================================
@@ -562,6 +601,7 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   .sw-copy__tags li.sw-key:hover,
   .sw-copy__tags li.sw-key:focus-visible,
   .sw-copy__tags li.sw-key.is-demo { transform: none; }
+  .sw-key.is-demo { animation: none; }
 }
 
 /* 键盘可达性 */

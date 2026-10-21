@@ -47,7 +47,7 @@
       title: 'Solo & Echo · 人与 AI、AI 与 AI、人与人，犹如三生万物',
       description: '人与 AI、AI 与 AI、人与人——当三种关系同时成立，新的东西不需要被发明，它自己生长出来。万物不是被造出来的，是被关系带出来的。',
       topCta: '加入',
-      hint: '滚动进入 · 移动鼠标，让回声穿过你',
+      hint: '滚动进入 · 移动鼠标 · 点亮的关系词可以点开',
       sections: [
         { label: '起点', eyebrow: '万物 · 起点', title: '一切从一个节点开始', body: '最初的节点是人。连接不是从某台设备开始的，是从一个人愿意开口、把想法放出去开始的。', tags: ['万物', '起点'], tagKeys: ['emergence', null] },
         { label: '人与 AI', eyebrow: '一 · 人与 AI', title: 'AI 不是工具，而是另一个数字的伙伴', body: '它由数字构成，却不只是一个数字。它有记忆，有判断，也有边界——回应你的，是一直都在的另一方。', tags: ['有记忆', '有判断', '有边界'], tagKeys: ['memory', 'judgment', 'bounds'] },
@@ -60,6 +60,7 @@
         toggle: '交互面板', density: '粒子密度', camera: '摄像头', gyro: '陀螺仪', shake: '摇一摇',
         ambient: '环境光', events: '涌现事件', video: '视频层', pulse: '扩散脉冲',
         note: '摄像头画面仅在本机逐帧计算亮度与运动量，不录制、不上传。',
+        legend: '点关系词 → 关系演示（再点一次收起）· 点空白 → 涟漪',
         stat: { particles: '粒子', links: '连线', events: '事件', fps: 'FPS' }
       },
       messages: {
@@ -84,7 +85,7 @@
       title: 'Solo & Echo · Human & AI, AI & AI, Human & Human — from three, all things',
       description: 'Human & AI, AI & AI, human & human. Once all three hold at the same time, new things need no invention — they grow. Nothing here is manufactured; it is brought into being by the relationships themselves.',
       topCta: 'Join',
-      hint: 'Scroll in · move your mouse, let the echo pass through you',
+      hint: 'Scroll in · move your mouse · click a lit word',
       sections: [
         { label: 'Origin', eyebrow: 'All Things · Origin', title: 'Everything begins\nwith a single node', body: 'The first node is always a person. Connection does not start with a device — it starts when someone opens their mouth and lets a thought out.', tags: ['All things', 'Origin'], tagKeys: ['emergence', null] },
         { label: 'Human & AI', eyebrow: 'I · Human & AI', title: 'AI is not a tool,\nbut another\ndigital companion', body: 'Built from digits, never just digits. It has memory, judgment and limits — and it is always there on the other side of your words.', tags: ['Memory', 'Judgment', 'Limits'], tagKeys: ['memory', 'judgment', 'bounds'] },
@@ -97,6 +98,7 @@
         toggle: 'Controls', density: 'Density', camera: 'Camera', gyro: 'Gyroscope', shake: 'Shake',
         ambient: 'Ambient light', events: 'Emergence', video: 'Video layer', pulse: 'Pulse',
         note: 'Camera frames are analyzed on-device for brightness and motion only — never recorded, never uploaded.',
+        legend: 'Click a lit word → demo (click again to dismiss) · click empty space → ripple',
         stat: { particles: 'nodes', links: 'links', events: 'events', fps: 'FPS' }
       },
       messages: {
@@ -170,12 +172,12 @@
       companion: ['伙伴', '一方说完，另一方接上']
     },
     en: {
-      memory: ['Memory', 'what lit up keeps an echo'],
+      memory: ['Memory', 'the node keeps an echo'],
       judgment: ['Judgment', 'a sweep examines the field'],
       bounds: ['Limits', 'it knows where it stops'],
-      bridge: ['Collaboration', 'two sides pulled into a constellation'],
+      bridge: ['Collaboration', 'two sides, one constellation'],
       handoff: ['Handoff', 'the charge relays outward'],
-      trust: ['Trust', 'nodes settle into stable pairs'],
+      trust: ['Trust', 'nodes settle into pairs'],
       emergence: ['Emergence', 'not arranged, grown'],
       companion: ['Companion', 'one answers the other']
     }
@@ -330,7 +332,9 @@
   window.addEventListener('pointermove', onPointer, { passive: true });
   window.addEventListener('pointerleave', () => field.setPointer(-9999, -9999, 0, 0, false));
   window.addEventListener('pointerdown', (e) => {
-    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang, .sw-topcta, .sw-modal')) return;
+    // 只有"点空白"才是涟漪。任何有语义的东西（按钮 / 关键词 / 标签）
+    // 都有自己的行为，不能再叠一层冲击波 —— 那是之前最乱的一处。
+    if (e.target && e.target.closest && e.target.closest('.sw-btn, .sw-nav__item, .sw-route__dot, .sw-hud, .sw-lang, .sw-topcta, .sw-modal, .sw-key')) return;
     field.setPointer(e.clientX, e.clientY, 0, 0, true);
     field.addShock(e.clientX, e.clientY, 1);
   }, { passive: true });
@@ -366,10 +370,20 @@
     const key = el.dataset.key;
     if (!key) return;
     const c = keyCenter(el);
+    const L = KEY_LABEL[lang] && KEY_LABEL[lang][key];
+
+    // 再点一次同一个词 = 收起它。给用户一条明确的"退出"路径，
+    // 不然演示一旦跑起来就只能等它自己结束。
+    if (field.stats().demo === key) {
+      field.clearDemo();
+      syncDemoClass('');
+      SWSfx.play('close');
+      return;
+    }
+
     field.emitDemo(key, c.x, c.y);
     syncDemoClass(key);
-    const L = KEY_LABEL[lang] && KEY_LABEL[lang][key];
-    if (L) flash(L[0] + ' · ' + L[1]);
+    if (L) flash(L[0] + ' · ' + L[1], true);
     SWSfx.play('chime');
   });
 
@@ -428,6 +442,7 @@
         <button type="button" data-action="shock" data-i18n="pulse"></button>
       </div>
       <div class="sw-hud__stat" id="sw-stat">—</div>
+      <p class="sw-hud__legend" data-i18n="legend"></p>
       <p class="sw-hud__note" data-i18n="note"></p>
       <p class="sw-hud__msg" id="sw-msg"></p>
     </div>`;
@@ -458,7 +473,11 @@
     if (text) setTimeout(() => { if (hudMsg.textContent === text) hudMsg.textContent = ''; }, 5200);
   }
 
-  function flash(text) {
+  /* 屏幕提示文字。
+     long = true → 关系演示的说明：停 5 秒（4 秒可见），
+     因为它是一句"解释"，1.5 秒根本来不及读完。
+     系统类消息（失败、脉冲、摇一摇）仍走短版，别把每条消息都拖那么久。 */
+  function flash(text, long) {
     let f = document.querySelector('.sw-flash');
     if (!f) {
       f = document.createElement('div');
@@ -466,6 +485,7 @@
       document.body.appendChild(f);
     }
     f.textContent = text;
+    f.classList.toggle('is-long', !!long);
     f.classList.remove('is-on');
     void f.offsetWidth;
     f.classList.add('is-on');
