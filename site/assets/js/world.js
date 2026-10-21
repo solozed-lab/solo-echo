@@ -303,9 +303,9 @@
       mix = 0.35 + 0.65 * (t * t * (3 - 2 * t));
     }
     field.setChapter(a, b, mix);
-    // 章节切换：气流扫过 + 一点落点（与宣传片同一套音效词汇）
+    // 章节切换：这一章的动机（与宣传片同一套动机，音区逐章递进）
     if (a !== lastChapter) {
-      if (lastChapter >= 0) { SWSfx.play('whoosh'); SWSfx.play('hit'); }
+      if (lastChapter >= 0) { SWSfx.playChapter(a); }
       lastChapter = a;
       syncLiveCopy();
     }
