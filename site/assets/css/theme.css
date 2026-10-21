@@ -263,6 +263,33 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
   background: var(--sw-accent);
 }
 
+/* ------------------------------------------------------ 音效开关（顶栏）
+   图标自己表达状态：带波纹 = 开着，斜杠 = 静音。
+   两个 svg 叠在同一个网格格里，切换时交叉淡入淡出。 */
+.sw-sound {
+  display: inline-grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: rgba(234, 246, 255, .74);
+  background: rgba(8, 13, 24, .55);
+  border: 1px solid rgba(234, 246, 255, .14);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: color .22s, border-color .22s, background .22s, box-shadow .22s;
+}
+.sw-sound:hover {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--sw-accent) 62%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--sw-accent) 24%, transparent);
+}
+.sw-sound svg { grid-area: 1 / 1; transition: opacity .2s ease, transform .2s ease; }
+.sw-sound__off { opacity: 0; transform: scale(.78); }
+.sw-sound.is-muted { color: rgba(234, 246, 255, .42); }
+.sw-sound.is-muted .sw-sound__on { opacity: 0; transform: scale(.78); }
+.sw-sound.is-muted .sw-sound__off { opacity: 1; transform: none; }
+
 /* ------------------------------------------------------------- HUD */
 .sw-hud {
   position: fixed;
@@ -608,7 +635,8 @@ html[lang="en"] .sw-copy__title { font-size: clamp(1.75rem, 3vw, 2.7rem); }
 .sw-hud button:focus-visible,
 .sw-nav__item:focus-visible,
 .sw-route__dot:focus-visible,
-.sw-btn:focus-visible {
+.sw-btn:focus-visible,
+.sw-sound:focus-visible {
   outline: 2px solid var(--sw-accent);
   outline-offset: 3px;
 }

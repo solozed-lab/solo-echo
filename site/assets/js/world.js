@@ -61,6 +61,8 @@
         ambient: '环境光', events: '涌现事件', video: '视频层', pulse: '扩散脉冲',
         note: '摄像头画面仅在本机逐帧计算亮度与运动量，不录制、不上传。',
         legend: '点关系词 → 关系演示（再点一次收起）· 点空白 → 涟漪',
+        mute: '关闭声音',
+        unmute: '开启声音',
         stat: { particles: '粒子', links: '连线', events: '事件', fps: 'FPS' }
       },
       messages: {
@@ -99,6 +101,8 @@
         ambient: 'Ambient light', events: 'Emergence', video: 'Video layer', pulse: 'Pulse',
         note: 'Camera frames are analyzed on-device for brightness and motion only — never recorded, never uploaded.',
         legend: 'Click a lit word → demo (click again to dismiss) · click empty space → ripple',
+        mute: 'Turn sound off',
+        unmute: 'Turn sound on',
         stat: { particles: 'nodes', links: 'links', events: 'events', fps: 'FPS' }
       },
       messages: {
@@ -485,7 +489,6 @@
       </div>
       <div class="sw-hud__row sw-hud__row--btns">
         <button type="button" data-toggle="events" data-i18n="events"></button>
-        <button type="button" data-toggle="sound" data-i18n="sound"></button>
         <button type="button" data-toggle="video" data-i18n="video"></button>
         <button type="button" data-action="shock" data-i18n="pulse"></button>
       </div>
@@ -569,16 +572,6 @@
     e.currentTarget.classList.toggle('is-on', on);
     document.documentElement.classList.toggle('sw-novideo', !on);
     msg(on ? T().messages.videoOn : T().messages.videoOff);
-  });
-
-  const soundBtn = hud.querySelector('[data-toggle="sound"]');
-  function syncSoundBtn() {
-    soundBtn.classList.toggle('is-on', SWSfx.enabled);
-    soundBtn.textContent = (SWSfx.enabled ? '声音 ' : '静音 ') + (lang === 'zh' ? '开' : 'on');
-  }
-  soundBtn.addEventListener('click', () => {
-    SWSfx.toggle();
-    syncSoundBtn();
   });
 
   hud.querySelector('[data-action="shock"]').addEventListener('click', () => {
@@ -706,6 +699,43 @@
     '<button type="button" data-lang="zh" lang="zh-CN">中</button>' +
     '<button type="button" data-lang="en" lang="en">EN</button>';
   rightGroup.appendChild(langToggle);
+
+  /* 音效开关：顶栏常驻的图标按钮。
+     之前它藏在 HUD 面板里（要展开才看得见），标签还是"声音 开 / 静音 开"
+     这种别扭文案，谁都读不出当前状态。现在图标自己表达状态，位置永远在眼前，
+     而且只有这一个地方 —— 一个东西只该有一个开关。
+     偏好存在 localStorage（soloecho.sfx = on/off），下次进站沿用。 */
+  const soundToggle = document.createElement('button');
+  soundToggle.className = 'sw-sound';
+  soundToggle.type = 'button';
+  soundToggle.setAttribute('aria-pressed', 'true');
+  soundToggle.innerHTML =
+    '<svg class="sw-sound__on" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">' +
+      '<path d="M4 9.5h3.1L11.6 5.4v13.2L7.1 14.5H4z" fill="currentColor"/>' +
+      '<path d="M14.9 8.9a4.6 4.6 0 0 1 0 6.2M17.4 6.2a8.2 8.2 0 0 1 0 11.6" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>' +
+    '</svg>' +
+    '<svg class="sw-sound__off" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">' +
+      '<path d="M4 9.5h3.1L11.6 5.4v13.2L7.1 14.5H4z" fill="currentColor"/>' +
+      '<path d="M15.4 9.3l5.2 5.4M20.6 9.3l-5.2 5.4" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+    '</svg>';
+
+  function syncSoundToggle() {
+    const on = SWSfx.enabled;
+    soundToggle.classList.toggle('is-muted', !on);
+    soundToggle.setAttribute('aria-pressed', String(on));
+    // 标签说的是"点下去会发生什么"，不是"现在是什么状态"
+    const label = on ? T().hud.mute : T().hud.unmute;
+    soundToggle.title = label;
+    soundToggle.setAttribute('aria-label', label);
+  }
+  soundToggle.addEventListener('click', () => {
+    SWSfx.toggle();
+    syncSoundToggle();
+  });
+  rightGroup.appendChild(soundToggle);
+
   if (topCta) rightGroup.appendChild(topCta);
   if (topbar) topbar.appendChild(rightGroup);
 
@@ -863,6 +893,7 @@
 
     // 按钮状态
     langToggle.querySelectorAll('button').forEach(b => b.classList.toggle('is-on', b.dataset.lang === lang));
+    syncSoundToggle();
 
     // 关键词标记：语言换了，正文里的词要重新标一遍
     markBodyKeywords();
@@ -881,7 +912,7 @@
   });
 
   applyLang(lang, false);
-  syncSoundBtn();
+  syncSoundToggle();
 
   /* --------------------------------------------------------- 滚动同步
      滚动速度 → 共振波：向下滚多少像素，波前就外扩多少像素。
