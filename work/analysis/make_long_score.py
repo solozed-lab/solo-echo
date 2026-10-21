@@ -19,10 +19,10 @@ SEC_PER_BLOCK = 2 * CELLS_PER_PHRASE   # `|: 乐句 :|` = 10s
 
 # 章节：名字 / 时长(s) / 块数(每块 10s)
 SECTIONS = [
-    ('hook',  20, 2),
-    ('one',   70, 7),
-    ('two',   70, 7),
-    ('three', 70, 7),
+    ('hook',  30, 3),
+    ('one',   80, 8),
+    ('two',   80, 8),
+    ('three', 80, 8),
     ('all',   40, 4),
     ('join',  30, 3),
 ]

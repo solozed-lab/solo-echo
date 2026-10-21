@@ -32,7 +32,7 @@ if (other.length) {
 }
 
 // fit：模拟 film5 的章节标签
-const LABELS = { hook: 0, one: 20, two: 90, three: 160, all: 230, join: 270 };
+const LABELS = { hook: 0, one: 30, two: 110, three: 190, all: 270, join: 310 };
 const align = {};
 for (const c of score.cues.filter(c => c.type === 'mark')) {
   if (LABELS[c.name] != null) align[c.name] = LABELS[c.name];
