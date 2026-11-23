@@ -174,6 +174,19 @@ $OM qa     film5          # 单帧跳变 / 死时间 / 运动曲线
 
 340s × 30fps = 10200 帧，约 15 分钟渲完（不启用 `--blur`）。
 
+## 部署：静态资源要带版本号
+
+Cloudflare Pages 给 `assets/*.js|css` 的缓存头是 `public, max-age=14400, must-revalidate`
+——浏览器 4 小时内不再回源。改了 JS/CSS 直接 push，**访问者的浏览器会继续跑旧文件**
+（2026-11-23 就踩到：线上还是旧的粒子层，curl 已经拿到新文件）。
+
+做法：`site/index.html` 里的静态资源引用统一带 `?v=YYYYMMDD`，
+**每次改了 JS/CSS 就把版本号往后推一天**，改完 push 即刻生效：
+
+```html
+<script src="assets/js/world.js?v=20261123"></script>
+```
+
 ## 三层结构
 
 | 层 | 内容 | 随滚动 scrub | 响应交互 |
