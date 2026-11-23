@@ -1,0 +1,40 @@
+{
+  "requests": [
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. A single bold calligraphic brushstroke in warm amber gold #ffb765: one continuous tapered stroke forming a clean flowing letter S, drawn like confident hand lettering, thick enough to stay legible when the image is scaled down to 32 pixels. To the lower right of the S, a small solid crescent moon in the same amber gold, clearly separated, same visual weight. The S and the crescent together fill about 65 percent of the frame, positioned exactly in the center with equal margins on all four sides. Flat vector look, crisp clean edges, quiet and calm, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-01-s-moon-hero.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. A single continuous calligraphic brushstroke in warm amber gold #ffb765: the stroke writes a flowing letter S and its lower tail elegantly transforms into a slender crescent moon, the stroke and the moon forming one unbroken gesture. Bold letterweight, stays legible when scaled to 32 pixels. The mark fills about 65 percent of the frame, exactly centered with equal margins on all four sides. Flat vector look, crisp clean edges, calm and restrained, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-02-s-moon-merged.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. A single bold calligraphic brushstroke in warm amber gold #ffb765 writing a clean flowing letter S, and directly beneath it one short thick horizontal water ripple line in the same gold, the two marks together filling about 65 percent of the frame, exactly centered with equal margins on all four sides. Bold letterweight, stays legible when scaled to 32 pixels. Flat vector look, crisp clean edges, calm and restrained, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-03-s-ripple.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. One single bold calligraphic brushstroke in warm amber gold #ffb765 writing a large clean flowing letter S, nothing else in the frame. Very bold letterweight so it stays perfectly legible when scaled to 32 pixels. The mark fills about 68 percent of the frame, exactly centered with equal margins on all four sides. Flat vector look, crisp clean edges, confident and quiet, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-04-s-plain.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. A single solid silhouette of a small ceramic teacup with a handle on a flat saucer, rendered in solid warm amber gold #ffb765, with one thin curl of steam rising from the cup. The cup fills about 62 percent of the frame, exactly centered with equal margins on all four sides, solid filled shapes with no interior detail so it stays legible at 32 pixels. Flat vector look, crisp clean edges, quiet and calm, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no hands, no person.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-05-teacup.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. One solid filled warm amber gold #ffb765 crescent moon floating just above one thick short horizontal line in the same gold, both solid filled shapes with clearly visible thickness so they stay legible when scaled to 32 pixels. Together they fill about 60 percent of the frame, exactly centered with equal margins on all four sides. Flat vector look, crisp clean edges, calm and restrained, high contrast. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no stars, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-06-moon-line.png"
+    }
+  ]
+}

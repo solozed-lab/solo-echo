@@ -1,0 +1,34 @@
+{
+  "requests": [
+    {
+      "prompt": "Minimalist avatar icon, square 1:1 composition, deep space blue-black background #05070f with a very subtle radial vignette. A single continuous tapered brushstroke in warm amber gold #ffb765, one unbroken calligraphic line forming a smooth flowing S curve; the thin tail of the stroke at the lower right gently resolves into a delicate crescent moon shape. The stroke occupies about 65% of the frame height, perfectly centered, generous negative space around it. Flat vector aesthetic, clean edges, calm quiet mood, no gradient mesh, no glow bloom, no 3D, no photorealism, no paper texture, no grain. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "silas-avatar-01-s-moon.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1 composition, deep space blue-black background #05070f with a very subtle radial vignette. A single continuous tapered brushstroke in warm amber gold #ffb765 forming a smooth flowing S curve that unrolls at its lower tail into one thin horizontal water ripple line fading into the dark. The stroke occupies about 65% of the frame height, perfectly centered, generous negative space. Flat vector aesthetic, clean edges, calm quiet mood, subtle warm light, no gradient mesh, no glow bloom, no 3D, no photorealism, no texture, no grain. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "silas-avatar-02-s-ripple.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1, deep space blue-black background #05070f with a very subtle radial vignette. A single minimalist silhouette of a small ceramic teacup on a saucer, seen from a low three-quarter angle, rendered as a clean flat shape in warm amber gold #ffb765, with one thin curl of steam rising from the cup. The cup occupies about 60% of the frame, centered, large negative space, flat vector style, simple geometric forms, calm quiet mood, no gradient mesh, no glow bloom, no photorealism, no texture, no grain. Absolutely no text, no letters, no words, no typography, no logos, no watermark, no border, no frame, no hands, no person.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "silas-avatar-03-teacup.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1, deep space blue-black background #05070f with a very subtle radial vignette. A single minimalist silhouette of a small angled desk lamp standing on an empty dark surface, casting one soft warm amber pool of light downward. The lamp occupies about 60% of the frame, centered, large negative space, flat vector style, simple geometric forms, quiet contemplative mood, no gradient mesh, no glow bloom, no photorealism, no texture, no grain. Absolutely no text, no letters, no words, no typography, no logos, no watermark, no border, no frame, no person.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "silas-avatar-04-desklamp.png"
+    },
+    {
+      "prompt": "Minimalist avatar icon, square 1:1, deep space blue-black background #05070f with a very subtle radial vignette. A thin warm amber crescent moon #ffb765 floating slightly above a single thin horizontal line of the same gold, both perfectly centered, occupying about 60% of the frame, large generous negative space, extreme minimalism, flat vector geometry, calm quiet mood, no gradient mesh, no glow bloom, no 3D, no photorealism, no texture, no grain. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no stars, no extra objects.",
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "silas-avatar-05-moon-line.png"
+    }
+  ]
+}

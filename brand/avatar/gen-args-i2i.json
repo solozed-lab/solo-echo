@@ -1,0 +1,18 @@
+{
+  "requests": [
+    {
+      "prompt": "Keep the same golden calligraphic letter S and the small crescent moon, but redraw it bolder and thicker so it stays legible when scaled to 32 pixels. Flat solid deep space blue-black background #05070f with no vignette, no gradient, no glow. Move the composition so the S and the crescent sit exactly in the center of the frame, together filling about 68 percent of the width, with equal empty margins on all four sides. Keep the warm amber gold #ffb765 color, keep the single continuous tapered brushstroke quality, keep the crescent clearly separated from the stroke. Flat vector look, crisp clean edges, high contrast, quiet and calm. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "input_urls": ["https://matrix-internal-cn.oss-cn-shanghai.aliyuncs.com/user_file_upload_tmp%2F2026-10-28%2F17f6e2f4-edef-498c-9458-43f13afb16b6.jpg?x-oss-credential=LTAI5tKjcNxbSxktvpFqdYgH%2F20261028%2Fcn-shanghai%2Foss%2Faliyun_v4_request&x-oss-date=20261028T060642Z&x-oss-expires=3600&x-oss-signature=6c9cad7efcd4b2ecfcd29f31e0f9de0ce8502d9716ac912a7d4f4495d0fd2ce2&x-oss-signature-version=OSS4-HMAC-SHA256"],
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-i2i-01-s-moon-bold.png"
+    },
+    {
+      "prompt": "Keep the same golden calligraphic letter S with the small crescent moon, but simplify and strengthen it: one single bold continuous tapered brushstroke in warm amber gold #ffb765 forming a clean flowing S, with a small solid crescent moon in the same gold just beside the lower tail, both shapes solid and clearly separated. Flat solid deep space blue-black background #05070f, no vignette, no gradient, no glow. Center the composition exactly, filling about 65 percent of the frame, equal margins on all four sides, everything on a single horizontal center axis. Flat vector look, crisp clean edges, high contrast, quiet and restrained. No gradient, no bloom, no 3D, no photorealism, no texture, no grain, no blur. Absolutely no text, no letters, no words, no typography, no logo, no watermark, no border, no frame, no extra objects.",
+      "input_urls": ["https://matrix-internal-cn.oss-cn-shanghai.aliyuncs.com/user_file_upload_tmp%2F2026-10-28%2F17f6e2f4-edef-498c-9458-43f13afb16b6.jpg?x-oss-credential=LTAI5tKjcNxbSxktvpFqdYgH%2F20261028%2Fcn-shanghai%2Foss%2Faliyun_v4_request&x-oss-date=20261028T060642Z&x-oss-expires=3600&x-oss-signature=6c9cad7efcd4b2ecfcd29f31e0f9de0ce8502d9716ac912a7d4f4495d0fd2ce2&x-oss-signature-version=OSS4-HMAC-SHA256"],
+      "aspect_ratio": "1:1",
+      "resolution": "2K",
+      "output_file": "r2-i2i-02-s-moon-flat.png"
+    }
+  ]
+}
