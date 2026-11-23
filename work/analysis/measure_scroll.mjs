@@ -21,7 +21,7 @@ await page.send('Page.navigate', { url: URL });
 await new Promise(r => setTimeout(r, 2500));   // 等首屏
 // 预热：先滚一遍让相邻素材下载+解码完成，测的是稳态滚动，不是首屏下载
 await page.evaluate('window.scrollTo(0, innerHeight*1.2)');
-await new Promise(r => setTimeout(r, 3000));
+await new Promise(r => setTimeout(r, 9000));   // 线上素材是渐进加载的，给足时间
 await page.evaluate('window.scrollTo(0, 0)');
 await new Promise(r => setTimeout(r, 800));
 

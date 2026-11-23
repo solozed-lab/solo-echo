@@ -263,7 +263,9 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 2.2 * vh && y < s.end + 2.2 * vh) loadClip(s);
+      // 预加载**不对称**：往前多看几屏。素材到达时的解码 + 首帧上屏会造成一次
+      // 百来毫秒的卡顿 —— 提前拉下来，卡顿就落在你还没滚到的那一段里。
+      if (y > s.start - 2.2 * vh && y < s.end + 5.0 * vh) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = timelineEase(s, local);
       let outside = 0;
