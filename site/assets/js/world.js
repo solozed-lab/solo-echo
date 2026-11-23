@@ -12,6 +12,22 @@
 (function () {
   'use strict';
 
+  /* ===================================================================
+     站点形态开关
+
+     PARTICLES = true  → 实时粒子场（鼠标牵引、扩散脉冲、摄像头/陀螺仪、
+                         关系词演示，全都画在这一层）
+     PARTICLES = false → 只留视频层（2026-11-23 决定：粒子场与章节片是同一套
+                         视觉语义的两套表达，同时在场时更亮的章节片会盖掉粒子，
+                         而交互反馈全都落在粒子层上 → 粒子层整体关掉）
+
+     关掉时：不创建 WebGL 上下文、不申请摄像头权限，所有 field.* 调用走空操作桩，
+     其余代码路径原样保留（结构不动，随时可以切回来）。
+     =================================================================== */
+  const PARTICLES = false;
+  // CSS 侧的同名 class 跟着这个开关走（index.html 里先写上，避免首帧闪一下旧样式）
+  document.documentElement.classList.toggle('sw-noparticles', !PARTICLES);
+
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
@@ -203,6 +219,21 @@
 
   const T = () => I18N[lang];
 
+  /* 粒子层关闭时的文案：凡是只对粒子层成立的交互（鼠标牵引、点空白起涟漪、
+     摄像头/陀螺仪、关系演示）都要换掉，不能留着说一套做另一套。 */
+  if (!PARTICLES) {
+    I18N.zh.hint = '滚动进入 · 点亮的关系词可以点开';
+    I18N.en.hint = 'Scroll in · click a lit word';
+    I18N.zh.hud.legend = '点关系词 → 看看它是什么关系（再点一次收起）';
+    I18N.en.hud.legend = 'Click a lit word → see what it means (click again to dismiss)';
+    I18N.zh.hud.note = '视频与文字都在本机播放，不上传任何数据。';
+    I18N.en.hud.note = 'Video and type play locally — nothing is uploaded.';
+    I18N.zh.modal.hint = '先四处看看：往下滚，六段关系会依次展开。';
+    I18N.en.modal.hint = 'Look around: scroll down and the six relations unfold one by one.';
+    I18N.zh.messages.videoOff = '视频层：关（只剩文字）';
+    I18N.en.messages.videoOff = 'Video layer: off (text only)';
+  }
+
   /* ------------------------------------------------- 章节配置 */
   function buildSections(l) {
     const C = I18N[l];
@@ -248,14 +279,26 @@
   const swTrack = world.querySelector('.sw-track');
   if (swTrack) swTrack.style.marginBottom = '-12px';
 
-  /* ---------------------------------------------- 实时粒子层（互动主角） */
-  const canvas = document.createElement('canvas');
-  canvas.className = 'sw-field';
-  canvas.setAttribute('aria-hidden', 'true');
-  world.appendChild(canvas);
+  const NO_FIELD = (() => {
+    let demo = null;
+    return {
+      setDensity() {}, setPointer() {}, addShock() {}, setHotspot() {}, clearHotspot() {},
+      setChapter() {}, setEvents() {}, setScroll() {}, resize() {}, renderStatic() {},
+      start() {}, stop() {},
+      emitDemo(k) { demo = k; }, clearDemo() { demo = null; },
+      stats() { return { demo: demo, particles: 0, lines: 0, events: 0, fps: 0 }; }
+    };
+  })();
 
-  const field = window.SWField.create(canvas, { reduce: reduce, coarse: coarse });
-  field.setDensity(coarse ? 0.55 : 0.9);
+  let field = NO_FIELD;
+  if (PARTICLES) {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'sw-field';
+    canvas.setAttribute('aria-hidden', 'true');
+    world.appendChild(canvas);
+    field = window.SWField.create(canvas, { reduce: reduce, coarse: coarse });
+    field.setDensity(coarse ? 0.55 : 0.9);
+  }
 
   /* 调试/自动化句柄：让外部（验收脚本、开发者控制台）能直接摸到场与传感器。
      不影响页面行为，只是把内部对象放到一个稳定的名字上。 */
@@ -459,13 +502,14 @@
   updateChapter();
 
   /* ------------------------------------------------------------- 传感器 */
-  const sensors = window.SWSensors.create(field, {
+  /* 传感器只驱动粒子场：粒子层关掉就不创建，也就不会去要摄像头权限 */
+  const sensors = PARTICLES ? window.SWSensors.create(field, {
     onState: () => updateHudState(),
     onShake: () => {
       field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.5, 1.2);
       flash(T().messages.shake);
     }
-  });
+  }) : null;
   if (window.SWPage) window.SWPage.sensors = sensors;
 
   /* --------------------------------------------------------------- HUD */
@@ -476,6 +520,7 @@
       <span class="sw-hud__dot"></span><span data-i18n="toggle"></span>
     </button>
     <div class="sw-hud__panel" hidden>
+      ${PARTICLES ? `
       <div class="sw-hud__row">
         <label for="sw-density" data-i18n="density"></label>
         <input id="sw-density" type="range" min="20" max="100" value="${coarse ? 55 : 90}">
@@ -486,13 +531,13 @@
         <button type="button" data-sensor="orientation" data-i18n="gyro"></button>
         <button type="button" data-sensor="motion" data-i18n="shake"></button>
         <button type="button" data-sensor="ambient" data-i18n="ambient"></button>
-      </div>
+      </div>` : ''}
       <div class="sw-hud__row sw-hud__row--btns">
-        <button type="button" data-toggle="events" data-i18n="events"></button>
+        ${PARTICLES ? '<button type="button" data-toggle="events" data-i18n="events"></button>' : ''}
         <button type="button" data-toggle="video" data-i18n="video"></button>
-        <button type="button" data-action="shock" data-i18n="pulse"></button>
+        ${PARTICLES ? '<button type="button" data-action="shock" data-i18n="pulse"></button>' : ''}
       </div>
-      <div class="sw-hud__stat" id="sw-stat">—</div>
+      ${PARTICLES ? '<div class="sw-hud__stat" id="sw-stat">—</div>' : ''}
       <p class="sw-hud__legend" data-i18n="legend"></p>
       <p class="sw-hud__note" data-i18n="note"></p>
       <p class="sw-hud__msg" id="sw-msg"></p>
@@ -513,7 +558,7 @@
     hud.classList.toggle('is-open', open);
   });
 
-  density.addEventListener('input', () => {
+  if (density) density.addEventListener('input', () => {
     densityOut.textContent = density.value;
     field.setDensity(Number(density.value) / 100);
   });
@@ -544,7 +589,7 @@
 
   hud.querySelectorAll('[data-sensor]').forEach(btn => {
     const which = btn.dataset.sensor;
-    const s = sensors[which];
+    const s = sensors && sensors[which];
     if (!s || !s.supported) { btn.disabled = true; btn.title = '当前设备不支持 / not supported on this device'; return; }
     btn.addEventListener('click', async () => {
       btn.classList.add('is-loading');
@@ -557,13 +602,16 @@
     });
   });
 
-  hud.querySelector('[data-toggle="events"]').addEventListener('click', (e) => {
-    const on = !e.currentTarget.classList.contains('is-on');
-    e.currentTarget.classList.toggle('is-on', on);
-    field.setEvents(on);
-    msg(on ? T().messages.eventsOn : T().messages.eventsOff);
-  });
-  hud.querySelector('[data-toggle="events"]').classList.add('is-on');
+  const eventsBtn = hud.querySelector('[data-toggle="events"]');
+  if (eventsBtn) {
+    eventsBtn.addEventListener('click', (e) => {
+      const on = !e.currentTarget.classList.contains('is-on');
+      e.currentTarget.classList.toggle('is-on', on);
+      field.setEvents(on);
+      msg(on ? T().messages.eventsOn : T().messages.eventsOff);
+    });
+    eventsBtn.classList.add('is-on');
+  }
 
   const videoBtn = hud.querySelector('[data-toggle="video"]');
   videoBtn.classList.add('is-on');
@@ -574,13 +622,15 @@
     msg(on ? T().messages.videoOn : T().messages.videoOff);
   });
 
-  hud.querySelector('[data-action="shock"]').addEventListener('click', () => {
+  const shockBtn = hud.querySelector('[data-action="shock"]');
+  if (shockBtn) shockBtn.addEventListener('click', () => {
     field.addShock(window.innerWidth * 0.5, window.innerHeight * 0.5, 1.4);
     SWSfx.play('subdrop');
     flash(T().messages.pulse);
   });
 
   function updateHudState() {
+    if (!sensors) return;
     const st = sensors.state;
     if (st.camera) msg(T().messages.camOn, 'ok');
   }
@@ -589,6 +639,7 @@
   let statTick = 0;
   function statsLoop(now) {
     requestAnimationFrame(statsLoop);
+    if (!PARTICLES) return;          // 粒子层关闭：没有粒子/连线/事件可报
     if (now - statTick < 500) return;
     statTick = now;
     const s = field.stats();
