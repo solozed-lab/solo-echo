@@ -18,7 +18,12 @@ if (MOBILE) {
   await page.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
 }
 await page.send('Page.navigate', { url: URL });
-await new Promise(r => setTimeout(r, 2500));   // 等首屏与素材就位
+await new Promise(r => setTimeout(r, 2500));   // 等首屏
+// 预热：先滚一遍让相邻素材下载+解码完成，测的是稳态滚动，不是首屏下载
+await page.evaluate('window.scrollTo(0, innerHeight*1.2)');
+await new Promise(r => setTimeout(r, 3000));
+await page.evaluate('window.scrollTo(0, 0)');
+await new Promise(r => setTimeout(r, 800));
 
 const out = await page.evaluate(`(async () => {
   // 统计所有 currentTime 赋值（= seek 次数）

@@ -517,8 +517,9 @@
      交互面板：粒子层关掉之后，面板里只剩一个「视频层」开关和两行说明，
      没有存在价值（2026-11-23 决定）→ 整个去掉。粒子层打开时再建。 */
 
+  let hud = null;          // 粒子层关闭时没有 HUD，语言切换等处要用它做存在性判断
   if (PARTICLES) {
-  const hud = document.createElement('aside');
+  hud = document.createElement('aside');
   hud.className = 'sw-hud';
   hud.innerHTML = `
     <button class="sw-hud__toggle" type="button" aria-expanded="false">
@@ -936,8 +937,8 @@
       }
     });
 
-    // HUD 文案
-    hud.querySelectorAll('[data-i18n]').forEach(el => {
+    // HUD 文案（没有 HUD 时跳过）
+    if (hud) hud.querySelectorAll('[data-i18n]').forEach(el => {
       const k = el.dataset.i18n;
       if (C.hud[k] != null) el.textContent = C.hud[k];
     });
