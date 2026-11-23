@@ -258,6 +258,7 @@
     hint: I18N[lang].hint,
     nav: true,
     atmosphere: true,
+    particles: PARTICLES,      // 粒子层关掉时，引擎里那层 CSS 动画粒子也是白烧 CPU
     diveScroll: 1.3,
     connScroll: 0.5,
     crossfade: 0.14,
@@ -512,7 +513,11 @@
   }) : null;
   if (window.SWPage) window.SWPage.sensors = sensors;
 
-  /* --------------------------------------------------------------- HUD */
+  /* --------------------------------------------------------------- HUD
+     交互面板：粒子层关掉之后，面板里只剩一个「视频层」开关和两行说明，
+     没有存在价值（2026-11-23 决定）→ 整个去掉。粒子层打开时再建。 */
+
+  if (PARTICLES) {
   const hud = document.createElement('aside');
   hud.className = 'sw-hud';
   hud.innerHTML = `
@@ -634,12 +639,12 @@
     const st = sensors.state;
     if (st.camera) msg(T().messages.camOn, 'ok');
   }
+  }   // ← if (PARTICLES)
 
   /* --------------------------------------------------------- 状态读数 */
   let statTick = 0;
   function statsLoop(now) {
     requestAnimationFrame(statsLoop);
-    if (!PARTICLES) return;          // 粒子层关闭：没有粒子/连线/事件可报
     if (now - statTick < 500) return;
     statTick = now;
     const s = field.stats();

@@ -116,7 +116,10 @@ function mountScrollWorld(container, config) {
     sky.appendChild(el('div', 'sw-sky__grad'));
     sky.appendChild(el('div', 'sw-sky__glow'));
   }
-  const particles = el('div', 'sw-particles'); sky.appendChild(particles);
+  // 粒子层可整层关掉（站点改成视频主导时，那 40 个 CSS 动画节点就是白烧 CPU）
+  const wantParticles = config.particles !== false;
+  const particles = el('div', 'sw-particles');
+  if (wantParticles) sky.appendChild(particles);
 
   const scrollbar = el('div', 'sw-scrollbar');
   const scrollbarFill = el('span'); scrollbar.appendChild(scrollbarFill);
@@ -260,17 +263,21 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      if (y > s.start - 2.2 * vh && y < s.end + 2.2 * vh) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = timelineEase(s, local);
       let outside = 0;
       if (y < s.start) outside = s.start - y; else if (y > s.end) outside = y - s.end;
       const op = smooth(1 - outside / fade);
-      s.el.style.opacity = op; s.visible = op > 0.001;
-      s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
+      s.op = op;                       // raf() 用它判断"这段还看得见吗"
+      if (Math.abs((s._op || 0) - op) > 0.002) { s.el.style.opacity = op; s._op = op; }
+      s.visible = op > 0.001;
+      const zi = (i === ci) ? '120' : String(100 + Math.round(op * 10));
+      if (s._zi !== zi) { s.el.style.zIndex = zi; s._zi = zi; }
       if (!s.hasClip || !s.ready) {
         const sc = reduce ? 1 : 1.03 + local * 0.14;
-        s.img.style.transform = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
+        const tr = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
+        if (s._tr !== tr) { s.img.style.transform = tr; s._tr = tr; }
       }
     }
 
@@ -283,7 +290,7 @@ function mountScrollWorld(container, config) {
       if (section.overlayEnter != null || section.overlayExit != null) {
         const enter = clamp(section.overlayEnter == null ? 0.12 : Number(section.overlayEnter));
         const exit = clamp(section.overlayExit == null ? 0.88 : Number(section.overlayExit));
-        const edge = 0.12;
+        const edge = 0.07;          // 收紧：两段文案交叠太久会在切换时糊成重影
         const enterOpacity = enter <= 0 ? 1 : smooth((pr - enter) / edge);
         const exitOpacity = exit >= 1 ? 1 : smooth((exit - pr) / edge);
         cop = before || after || exit <= enter ? 0 : Math.min(enterOpacity, exitOpacity);
@@ -291,9 +298,13 @@ function mountScrollWorld(container, config) {
       else if (i === N - 1) cop = before ? 0 : smooth(pr / 0.4);       // holds CTA at the end
       else cop = (before || after) ? 0 : smooth(1 - Math.abs(pr - 0.5) / 0.5);
       const c = copies[i];
-      c.style.opacity = cop;
-      c.style.transform = reduce ? 'none' : `translateY(${(0.5 - pr) * 4}vh)`;
-      c.style.pointerEvents = cop > 0.5 ? 'auto' : 'none';
+      if (Math.abs((c._op || 0) - cop) > 0.002) { c.style.opacity = cop; c._op = cop; }
+      // CSS 里是 translateY(-50%) 居中；引擎以前直接覆盖 transform，把居中冲掉了，
+      // 文案会在淡入的瞬间往下跳半个身位。改成 calc(-50% + 视差)。
+      const ty = reduce ? 'translateY(-50%)' : `translateY(calc(-50% + ${((0.5 - pr) * 4).toFixed(3)}vh))`;
+      if (c._ty !== ty) { c.style.transform = ty; c._ty = ty; }
+      const pe = cop > 0.5 ? 'auto' : 'none';
+      if (c._pe !== pe) { c.style.pointerEvents = pe; c._pe = pe; }
     }
 
     const cur = SEGMENTS[ci];
@@ -307,26 +318,39 @@ function mountScrollWorld(container, config) {
     }
     scrollbarFill.style.transform = `scaleX(${clamp(y / (totalW * vh))})`;
     hint.style.opacity = clamp(1 - y / (0.5 * vh));
-    if (particles) particles.style.transform = `translate3d(0, ${-y * 0.05}px, 0)`;
+    if (wantParticles) particles.style.transform = `translate3d(0, ${-y * 0.05}px, 0)`;
     ticking = false;
   }
 
-  function raf() {
-    const eps = isMobile() ? 0.02 : 0.008;   // coarser seek step on phones = fewer decodes
+  /* 逐帧推进：把视频当前时间追向滚动目标。
+     关键约束：**不要每帧 seek**。每帧 seek = 每帧一次解码请求，解码器追不上就卡
+     （手机上最明显：快速滑动时画面直接冻住）。所以：
+       1) 插值按真实时间算（掉帧时追得一样快，不会越掉越远）
+       2) seek 频率封顶（桌面 30 次/秒 ≈ 素材帧率，手机 24 次/秒）
+       3) 只追画面上真正看得见的那一段（淡到 12% 以下的冻结一下看不出来，
+          但省掉一半解码量——切换时两段重叠，这一条最值钱） */
+  let lastFrameT = performance.now();
+  function raf(now) {
+    const dt = Math.min(Math.max((now - lastFrameT) / 1000, 0), 0.1);
+    lastFrameT = now;
+    const k = reduce ? 1 : 1 - Math.pow(1 - 0.18, dt * 60);   // 帧率无关
+    const eps = isMobile() ? 0.022 : 0.010;
+    const seekGap = isMobile() ? 1000 / 24 : 1000 / 30;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
-      // Never queue a seek while the decoder is still resolving the last one.
-      // On phones a fast flick would otherwise pile up seeks and freeze the clip;
-      // cur keeps lerping, so we snap to the latest target the moment it's free.
-      if (s.video.seeking) continue;
-      if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
-      s.cur += (s.target - s.cur) * (reduce ? 1 : 0.18);
+      // 插值永远推进（哪怕解码器正忙），否则视频会越落越远
+      s.cur += (s.target - s.cur) * k;
+      if (s.video.seeking) continue;                       // 解码器还忙 → 下一帧再追
+      if (s.op < 0.12) continue;                          // 已经淡到看不见了
+      if (now - (s.lastSeek || 0) < seekGap) continue;   // seek 频率封顶
       const dur = s.video.duration || 1;
       const t0 = Number.isFinite(s.t0) ? s.t0 : 0;
       const t1 = Number.isFinite(s.t1) ? s.t1 : dur;
       const t = t0 + clamp(s.cur, 0, 0.999) * Math.max(t1 - t0, 0.001);
-      if (Math.abs(s.video.currentTime - t) > eps) { try { s.video.currentTime = t; } catch (e) {} }
+      if (Math.abs(s.video.currentTime - t) > eps) {
+        try { s.video.currentTime = t; s.lastSeek = now; } catch (e) {}
+      }
     }
     requestAnimationFrame(raf);
   }
@@ -350,7 +374,7 @@ function mountScrollWorld(container, config) {
   window.addEventListener('touchstart', onFirstGesture, { once: true, passive: true });
 
   // Particles are a per-frame cost we can't afford alongside video scrubbing on a phone.
-  seedParticles(particles, reduce || coarse);
+  if (wantParticles) seedParticles(particles, reduce || coarse);
   window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(read); } }, { passive: true });
   // Mobile browsers fire `resize` every time the URL bar slides in/out. Re-running
   // layout() there rebuilds the track height and yanks the scroll position, so on

@@ -174,6 +174,37 @@ $OM qa     film5          # 单帧跳变 / 死时间 / 运动曲线
 
 340s × 30fps = 10200 帧，约 15 分钟渲完（不启用 `--blur`）。
 
+## 滚动 scrub 的性能（视频主导之后，滚动就是全部）
+
+页面是「滚动 =  scrub 视频时间轴」，所以滚动的流畅度**等于**视频的流畅度。
+以前每帧都 `currentTime = t`（seek），解码器追不上就卡 —— 快速滚动时画面直接冻住。
+
+**现在的做法**（`site/scrub-engine.js` 的 `raf()`）：
+
+1. **插值按真实时间算**：`k = 1 - (1-0.18)^(dt*60)`，掉帧时追得一样快，不会越掉越远
+2. **seek 频率封顶**：桌面 30 次/秒（= 素材帧率），手机 24 次/秒
+3. **只追看得见的那一段**：淡到 12% 以下的段不 seek（切换时两段重叠，这条最值钱）
+4. **样式只写变化的部分**：滚动时每帧几十次 DOM 写 = 白掉帧
+
+实测（`work/analysis/measure_scroll.mjs`，CDP 模拟 3 秒滚 2 屏）：
+
+| | 改之前 | 改之后 |
+|---|---|---|
+| 桌面 帧率 / 最长卡顿 | 54.6 fps / **222ms** | 60.2 fps / **17.7ms** |
+| 桌面 seek 频率 | 57.5 次/秒 | 25.3 次/秒 |
+| 手机 帧率 / 最长卡顿 | 59 fps / **107.8ms** | 60 fps / **17.8ms** |
+| 手机 seek 频率 | 63 次/秒 | 22.2 次/秒 |
+
+```bash
+node work/analysis/measure_scroll.mjs http://127.0.0.1:8901/site/          # 桌面
+node work/analysis/measure_scroll.mjs http://127.0.0.1:8901/site/ mobile   # 手机
+```
+
+**另外修掉的一个真 bug**：引擎以前直接覆盖 `.sw-copy` 的 `transform`，
+把 CSS 里的 `translateY(-50%)` 居中冲掉了 —— 文案在淡入瞬间会往下跳半个身位。
+现在改成 `translateY(calc(-50% + 视差))`，居中保住，视差还在；
+淡入淡出的 edge 从 0.12 收到 0.07，两段文案不再在切换时糊成重影。
+
 ## 部署：静态资源要带版本号
 
 Cloudflare Pages 给 `assets/*.js|css` 的缓存头是 `public, max-age=14400, must-revalidate`
