@@ -200,6 +200,9 @@ node work/analysis/measure_scroll.mjs http://127.0.0.1:8901/site/          # 桌
 node work/analysis/measure_scroll.mjs http://127.0.0.1:8901/site/ mobile   # 手机
 ```
 
+**预加载改成不对称**（往前多看 5 屏）：素材到达时要解码首帧 + 上屏，会造成一次百来毫秒的
+卡顿 —— 提前几屏拉下来，卡顿就落在你还没滚到的那一段里。
+
 **另外修掉的一个真 bug**：引擎以前直接覆盖 `.sw-copy` 的 `transform`，
 把 CSS 里的 `translateY(-50%)` 居中冲掉了 —— 文案在淡入瞬间会往下跳半个身位。
 现在改成 `translateY(calc(-50% + 视差))`，居中保住，视差还在；
