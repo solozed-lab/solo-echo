@@ -645,10 +645,11 @@
   let statTick = 0;
   function statsLoop(now) {
     requestAnimationFrame(statsLoop);
+    if (!PARTICLES) return;          // 粒子层关闭：没有粒子/连线/事件可报，也没有传感器
     if (now - statTick < 500) return;
     statTick = now;
     const s = field.stats();
-    const st = sensors.state;
+    const st = sensors ? sensors.state : {};
     const K = T().hud.stat;
     const bits = [
       K.particles + ' ' + s.particles,
