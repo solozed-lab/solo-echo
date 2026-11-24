@@ -139,6 +139,7 @@ function mountScrollWorld(container, config) {
   }
 
   const stage = el('div', 'sw-stage');
+  const sweep = el('div', 'sw-sweep');      // 透明层：渐变光扫过
   const copylayer = el('div', 'sw-copylayer');
   const route = el('div', 'sw-route');
   const hint = el('div', 'sw-hint');
@@ -146,7 +147,7 @@ function mountScrollWorld(container, config) {
   hint.appendChild(el('i'));
   const track = el('div', 'sw-track');
 
-  [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
+  [sky, scrollbar, topbar, stage, sweep, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
   SEGMENTS.forEach(s => {
@@ -257,42 +258,66 @@ function mountScrollWorld(container, config) {
   }
 
   function read() {
+    try { readInner(); } finally { ticking = false; }
+  }
+
+  function readInner() {
     const y = window.scrollY || window.pageYOffset;
     const fade = CROSSFADE * vh;
     let ci = 0;
     for (let i = 0; i < NSEG; i++) if (y >= SEGMENTS[i].start) ci = i;
 
-    // 每一段的透明度：**在结束前 fade 内淡出，在开始前 fade 内淡入**。
-    // 两段的淡出/淡入区在同一个边界上重合 → 前后两段的透明度互补（和恒为 1），
-    // 于是边界上是一次连续的溶解。
-    // （以前是"出了自己的区间才淡出"，淡出区落在边界之后、淡入区落在边界之前，
-    //   两段各自满不透明地顶着对方，再叠上"当前段永远最上层"的 z 序 → 边界上硬切。）
-    const ops = [];
+    // ---- 章节切换的做法 ----
+    // · 相邻两段留一段**重叠区**（LEAD）：在重叠区里两段视频都在动，
+    //   不是"旧的一段冻住、新的一段淡入"
+    // · 入场的那一段透过一个**渐变边缘的圆孔**显形（真 mask，不是透明度叠化）
+    // · 同时一道**透明层**的渐变光扫过，给过渡方向感
+    const LEAD = 0.10 * vh;
+    let sweepP = null;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       // 预加载**不对称**：往前多看几屏。素材到达时的解码 + 首帧上屏会造成一次
       // 百来毫秒的卡顿 —— 提前拉下来，卡顿就落在你还没滚到的那一段里。
       if (y > s.start - 2.2 * vh && y < s.end + 5.0 * vh) loadClip(s);
-      const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
+      // 视频进度：把重叠区算进去 → 揭示时这一段已经在播，不是冻在第一帧
+      const local = clamp((y - (s.start - LEAD)) / ((s.end - s.start) + 2 * LEAD), 0, 1);
       s.target = timelineEase(s, local);
-      const op = Math.min(smooth((y - (s.start - fade)) / fade), smooth((s.end - y) / fade));
-      s.op = op;                       // raf() 用它判断"这段还看得见吗"
-      if (Math.abs((s._op || 0) - op) > 0.002) { s.el.style.opacity = op; s._op = op; }
-      s.visible = op > 0.001;
+
+      // 揭示进度：这一段的圆孔从 0 长到 175%（超出对角线 = 全画面显出来）
+      const rev = i === 0 ? 1 : clamp((y - s.start) / fade);
+      const rr = smooth(rev);
+      if (rev > 0.0004 && rev < 0.9996) {
+        if (!s._masked) { s.el.classList.add('sw-scene--reveal'); s._masked = true; }
+        s.el.style.setProperty('--mr', (rr * 175).toFixed(1) + '%');
+        sweepP = rr;
+      } else if (s._masked) {
+        s.el.classList.remove('sw-scene--reveal'); s._masked = false;
+        s.el.style.setProperty('--mr', '175%');
+      }
+      s.op = rev > 0.0004 ? 1 : 0;
+      s.visible = s.op > 0.001;
       if (!s.hasClip || !s.ready) {
         const sc = reduce ? 1 : 1.03 + local * 0.14;
         const tr = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
         if (s._tr !== tr) { s.img.style.transform = tr; s._tr = tr; }
       }
-      ops.push({ s: s, op: op, i: i });
-    }
-    // z 序按透明度排：谁更亮谁在上面。翻转只发生在两段各 50% 的时候 ——
-    // 此时混合结果与顺序无关，所以这一翻肉眼看不见。
-    ops.sort((a, b) => b.op - a.op);
-    for (let r = 0; r < ops.length; r++) {
-      const s = ops[r].s;
-      const zi = String(120 - r);
+      // z 序：靠后的一段在上 → 入场的那段从下往上"长"出来盖住前一段
+      const zi = String(100 + i);
       if (s._zi !== zi) { s.el.style.zIndex = zi; s._zi = zi; }
+    }
+    // 透明度：当前段 + 正在被盖住的那一段要可见，其余隐藏（省合成层）
+    const curRev = ci === 0 ? 1 : clamp((y - SEGMENTS[ci].start) / fade);
+    for (let i = 0; i < NSEG; i++) {
+      const s = SEGMENTS[i];
+      const op = (i === ci) || (i === ci - 1 && curRev < 0.9996) ? 1 : 0;
+      if (s._op !== op) { s.el.style.opacity = op; s._op = op; }
+    }
+    // 透明层：揭示过程中一道渐变光扫过
+    if (sweepP != null) {
+      sweep.style.opacity = (Math.sin(sweepP * Math.PI) * 0.85).toFixed(3);
+      sweep.style.transform = `translateX(${(105 - 120 * sweepP).toFixed(1)}%)`;
+    } else if (sweep.style.opacity !== '0') {
+      sweep.style.opacity = '0';
     }
 
     for (let i = 0; i < N; i++) {
@@ -333,7 +358,6 @@ function mountScrollWorld(container, config) {
     scrollbarFill.style.transform = `scaleX(${clamp(y / (totalW * vh))})`;
     hint.style.opacity = clamp(1 - y / (0.5 * vh));
     if (wantParticles) particles.style.transform = `translate3d(0, ${-y * 0.05}px, 0)`;
-    ticking = false;
   }
 
   /* 逐帧推进：把视频当前时间追向滚动目标。
@@ -463,6 +487,15 @@ function injectCSS() {
   .sw-topcta{text-decoration:none;font-weight:600;font-size:.9rem;color:#fff;background:var(--sw-ink);padding:10px 20px;border-radius:999px;white-space:nowrap;}
   .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
+  /* 遮罩：入场的那一段透过一个**渐变边缘的圆孔**显形（不是透明度叠化） */
+  .sw-scene--reveal{
+    -webkit-mask-image:radial-gradient(circle at var(--mx,50%) var(--my,50%),#000 0 var(--mr,175%),transparent calc(var(--mr,175%) + 16%));
+    mask-image:radial-gradient(circle at var(--mx,50%) var(--my,50%),#000 0 var(--mr,175%),transparent calc(var(--mr,175%) + 16%));
+  }
+  /* 透明层：切点时一道渐变光扫过画面，给过渡一个方向感 */
+  .sw-sweep{position:fixed;inset:-30% -60%;z-index:15;pointer-events:none;opacity:0;
+    background:linear-gradient(102deg,transparent 42%,rgba(150,215,255,.09) 47.5%,rgba(255,255,255,.20) 50%,rgba(150,215,255,.09) 52.5%,transparent 58%);
+    will-change:transform,opacity;}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
   .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;} .sw-scene__video{z-index:1;}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
