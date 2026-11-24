@@ -80,7 +80,8 @@ function mountScrollWorld(container, config) {
   const CONNECTORS_M = config.connectorsMobile || [];
   const DIVE_W = config.diveScroll || 1.3;
   const CONN_W = config.connScroll || 0.9;
-  const CROSSFADE = (config.crossfade != null) ? config.crossfade : 0.12;  // seam dissolve width (vh)
+  const CROSSFADE = (config.crossfade != null) ? config.crossfade : 0.30;  // seam dissolve width (vh)
+  // 0.12 太短：正常速度滚过去只要 0.2 秒，读起来就是硬切。0.30vh ≈ 216px，溶解才看得见。
   const N = SECTIONS.length;
   if (!N) return;
 
@@ -261,6 +262,12 @@ function mountScrollWorld(container, config) {
     let ci = 0;
     for (let i = 0; i < NSEG; i++) if (y >= SEGMENTS[i].start) ci = i;
 
+    // 每一段的透明度：**在结束前 fade 内淡出，在开始前 fade 内淡入**。
+    // 两段的淡出/淡入区在同一个边界上重合 → 前后两段的透明度互补（和恒为 1），
+    // 于是边界上是一次连续的溶解。
+    // （以前是"出了自己的区间才淡出"，淡出区落在边界之后、淡入区落在边界之前，
+    //   两段各自满不透明地顶着对方，再叠上"当前段永远最上层"的 z 序 → 边界上硬切。）
+    const ops = [];
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       // 预加载**不对称**：往前多看几屏。素材到达时的解码 + 首帧上屏会造成一次
@@ -268,19 +275,24 @@ function mountScrollWorld(container, config) {
       if (y > s.start - 2.2 * vh && y < s.end + 5.0 * vh) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = timelineEase(s, local);
-      let outside = 0;
-      if (y < s.start) outside = s.start - y; else if (y > s.end) outside = y - s.end;
-      const op = smooth(1 - outside / fade);
+      const op = Math.min(smooth((y - (s.start - fade)) / fade), smooth((s.end - y) / fade));
       s.op = op;                       // raf() 用它判断"这段还看得见吗"
       if (Math.abs((s._op || 0) - op) > 0.002) { s.el.style.opacity = op; s._op = op; }
       s.visible = op > 0.001;
-      const zi = (i === ci) ? '120' : String(100 + Math.round(op * 10));
-      if (s._zi !== zi) { s.el.style.zIndex = zi; s._zi = zi; }
       if (!s.hasClip || !s.ready) {
         const sc = reduce ? 1 : 1.03 + local * 0.14;
         const tr = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
         if (s._tr !== tr) { s.img.style.transform = tr; s._tr = tr; }
       }
+      ops.push({ s: s, op: op, i: i });
+    }
+    // z 序按透明度排：谁更亮谁在上面。翻转只发生在两段各 50% 的时候 ——
+    // 此时混合结果与顺序无关，所以这一翻肉眼看不见。
+    ops.sort((a, b) => b.op - a.op);
+    for (let r = 0; r < ops.length; r++) {
+      const s = ops[r].s;
+      const zi = String(120 - r);
+      if (s._zi !== zi) { s.el.style.zIndex = zi; s._zi = zi; }
     }
 
     for (let i = 0; i < N; i++) {
